@@ -1,0 +1,351 @@
+
+*** Running vivado
+    with args -log TOP.vdi -applog -m64 -product Vivado -messageDb vivado.pb -mode batch -source TOP.tcl -notrace
+
+
+
+****** Vivado v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Thu Dec 11 13:48:43 2025
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source TOP.tcl -notrace
+create_project: Time (s): cpu = 00:00:14 ; elapsed = 00:00:10 . Memory (MB): peak = 525.137 ; gain = 219.488
+Command: link_design -top TOP -part xc7a12ticsg325-1L
+Design is defaulting to srcset: sources_1
+Design is defaulting to constrset: constrs_1
+INFO: [Device 21-403] Loading part xc7a12ticsg325-1L
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.001 . Memory (MB): peak = 722.395 ; gain = 0.000
+INFO: [Netlist 29-17] Analyzing 3 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2025.2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+Parsing XDC File [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc]
+CRITICAL WARNING: [Vivado 12-1815] Setting property 'IOSTANDARD' is not allowed for GT terminals. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:8]
+CRITICAL WARNING: [Common 17-69] Command failed: 'L16' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:16]
+CRITICAL WARNING: [Common 17-69] Command failed: 'M13' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:17]
+CRITICAL WARNING: [Common 17-69] Command failed: 'U18' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:21]
+CRITICAL WARNING: [Common 17-69] Command failed: 'V10' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:30]
+CRITICAL WARNING: [Common 17-69] Command failed: 'J13' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:36]
+CRITICAL WARNING: [Common 17-69] Command failed: 'T16' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:45]
+CRITICAL WARNING: [Common 17-69] Command failed: 'V15' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:46]
+CRITICAL WARNING: [Common 17-69] Command failed: 'T10' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:60]
+CRITICAL WARNING: [Common 17-69] Command failed: 'R10' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:61]
+CRITICAL WARNING: [Common 17-69] Command failed: 'K13' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:63]
+CRITICAL WARNING: [Common 17-69] Command failed: 'T11' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:65]
+CRITICAL WARNING: [Common 17-69] Command failed: 'J17' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:70]
+CRITICAL WARNING: [Common 17-69] Command failed: 'T9' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:72]
+CRITICAL WARNING: [Common 17-69] Command failed: 'U13' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:77]
+CRITICAL WARNING: [Common 17-69] Command failed: 'M18' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:84]
+CRITICAL WARNING: [Common 17-69] Command failed: 'P17' is not a valid site or package pin name. [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc:85]
+Finished Parsing XDC File [C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/constrs_1/imports/Downloads/Nexys-A7-100T-Master.xdc]
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 851.441 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+7 Infos, 0 Warnings, 17 Critical Warnings and 0 Errors encountered.
+link_design completed successfully
+link_design: Time (s): cpu = 00:00:04 ; elapsed = 00:00:06 . Memory (MB): peak = 855.418 ; gain = 330.281
+Command: opt_design
+Attempting to get a license for feature 'Implementation' and/or device 'xc7a12ti'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7a12ti'
+Running DRC as a precondition to command opt_design
+
+Starting DRC Task
+INFO: [DRC 23-27] Running DRC with 2 threads
+INFO: [Project 1-461] DRC finished with 0 Errors
+INFO: [Project 1-462] Please refer to the DRC report (report_drc) for more information.
+
+Time (s): cpu = 00:00:02 ; elapsed = 00:00:00.896 . Memory (MB): peak = 883.984 ; gain = 28.566
+
+Starting Cache Timing Information Task
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Ending Cache Timing Information Task | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1401.902 ; gain = 517.918
+
+Starting Logic Optimization Task
+
+Phase 1 Initialization
+
+Phase 1.1 Core Generation And Design Setup
+Phase 1.1 Core Generation And Design Setup | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.002 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Phase 1.2 Setup Constraints And Sort Netlist
+Phase 1.2 Setup Constraints And Sort Netlist | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.004 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Phase 1 Initialization | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.005 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Phase 2 Timer Update And Timing Data Collection
+
+Phase 2.1 Detect if minReqCache needed
+Phase 2.1 Detect if minReqCache needed | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.011 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Phase 2.2 Timer Update
+Phase 2.2 Timer Update | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.020 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Phase 2.3 Timing Data Collection
+Phase 2.3 Timing Data Collection | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.021 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Phase 2 Timer Update And Timing Data Collection | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.022 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Phase 3 Retarget
+INFO: [Opt 31-1851] Number of loadless carry chains removed were: 0
+INFO: [Opt 31-1834] Total Chains To Be Transformed Were: 0 AND Number of Transformed insts Created are: 0
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+INFO: [Opt 31-49] Retargeted 0 cell(s).
+Phase 3 Retarget | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.032 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Retarget | Checksum: 2ad3e2605
+INFO: [Opt 31-389] Phase Retarget created 0 cells and removed 0 cells
+
+Phase 4 Constant propagation
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Phase 4 Constant propagation | Checksum: 2ad3e2605
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.036 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Constant propagation | Checksum: 2ad3e2605
+INFO: [Opt 31-389] Phase Constant propagation created 0 cells and removed 0 cells
+
+Phase 5 Sweep
+INFO: [Constraints 18-11670] Building netlist checker database with flags, 0x8
+Done building netlist checker database: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Phase 5 Sweep | Checksum: 2b4647440
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.045 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Sweep | Checksum: 2b4647440
+INFO: [Opt 31-389] Phase Sweep created 2 cells and removed 0 cells
+
+Phase 6 BUFG optimization
+Phase 6 BUFG optimization | Checksum: 2b4647440
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.057 . Memory (MB): peak = 1862.113 ; gain = 0.000
+BUFG optimization | Checksum: 2b4647440
+INFO: [Opt 31-662] Phase BUFG optimization created 0 cells of which 0 are BUFGs and removed 0 cells.
+
+Phase 7 Shift Register Optimization
+INFO: [Opt 31-1064] SRL Remap converted 0 SRLs to 0 registers and converted 0 registers of register chains to 0 SRLs
+Phase 7 Shift Register Optimization | Checksum: 2b4647440
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.060 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Shift Register Optimization | Checksum: 2b4647440
+INFO: [Opt 31-389] Phase Shift Register Optimization created 0 cells and removed 0 cells
+
+Phase 8 Post Processing Netlist
+Phase 8 Post Processing Netlist | Checksum: 28b923a01
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.064 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Post Processing Netlist | Checksum: 28b923a01
+INFO: [Opt 31-389] Phase Post Processing Netlist created 0 cells and removed 0 cells
+
+Phase 9 Finalization
+
+Phase 9.1 Finalizing Design Cores and Updating Shapes
+Phase 9.1 Finalizing Design Cores and Updating Shapes | Checksum: 1d7c72bdc
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.071 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Phase 9.2 Verifying Netlist Connectivity
+
+Starting Connectivity Check Task
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.008 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Phase 9.2 Verifying Netlist Connectivity | Checksum: 1d7c72bdc
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.082 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Phase 9 Finalization | Checksum: 1d7c72bdc
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.084 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Opt_design Change Summary
+=========================
+
+
+-------------------------------------------------------------------------------------------------------------------------
+|  Phase                        |  #Cells created  |  #Cells Removed  |  #Constrained objects preventing optimizations  |
+-------------------------------------------------------------------------------------------------------------------------
+|  Retarget                     |               0  |               0  |                                              0  |
+|  Constant propagation         |               0  |               0  |                                              0  |
+|  Sweep                        |               2  |               0  |                                              0  |
+|  BUFG optimization            |               0  |               0  |                                              0  |
+|  Shift Register Optimization  |               0  |               0  |                                              0  |
+|  Post Processing Netlist      |               0  |               0  |                                              0  |
+-------------------------------------------------------------------------------------------------------------------------
+
+
+Ending Logic Optimization Task | Checksum: 1d7c72bdc
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.087 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Starting Power Optimization Task
+INFO: [Pwropt 34-132] Skipping clock gating for clocks with a period < 2.00 ns.
+Ending Power Optimization Task | Checksum: 1d7c72bdc
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.012 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Starting Final Cleanup Task
+Ending Final Cleanup Task | Checksum: 1d7c72bdc
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.001 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1862.113 ; gain = 0.000
+INFO: [Common 17-83] Releasing license: Implementation
+27 Infos, 0 Warnings, 17 Critical Warnings and 0 Errors encountered.
+opt_design completed successfully
+opt_design: Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 1862.113 ; gain = 1006.695
+INFO: [Vivado 12-24828] Executing command : report_drc -file TOP_drc_opted.rpt -pb TOP_drc_opted.pb -rpx TOP_drc_opted.rpx
+Command: report_drc -file TOP_drc_opted.rpt -pb TOP_drc_opted.pb -rpx TOP_drc_opted.rpx
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'C:/AMDDesignTools/2025.2/Vivado/data/ip'.
+INFO: [DRC 23-27] Running DRC with 2 threads
+INFO: [Vivado_Tcl 2-168] The results of DRC are in file C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.runs/impl_1/TOP_drc_opted.rpt.
+report_drc completed successfully
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.002 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Wrote PlaceDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.001 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Wrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Wrote RouteStorage: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.022 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Wrote PlaceStorage: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Wrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Wrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.008 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Write Physdb Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.045 . Memory (MB): peak = 1862.113 ; gain = 0.000
+INFO: [Common 17-1381] The checkpoint 'C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.runs/impl_1/TOP_opt.dcp' has been generated.
+Command: place_design
+Attempting to get a license for feature 'Implementation' and/or device 'xc7a12ti'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7a12ti'
+INFO: [Common 17-83] Releasing license: Implementation
+INFO: [DRC 23-27] Running DRC with 2 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Running DRC as a precondition to command place_design
+INFO: [DRC 23-27] Running DRC with 2 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+INFO: [Place 30-611] Multithreading enabled for place_design using a maximum of 2 CPUs
+
+Starting Placer Task
+
+Phase 1 Placer Initialization
+
+Phase 1.1 Placer Initialization Netlist Sorting
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Phase 1.1 Placer Initialization Netlist Sorting | Checksum: 16194dca9
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1862.113 ; gain = 0.000
+
+Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device
+ERROR: [Place 30-58] IO placement is infeasible. Number of unplaced IO Ports (14) is greater than number of available pins (0).
+The following are banks with available pins: 
+ IO Group: 0 with : SioStd: LVCMOS18   VCCO = 1.8 Termination: 0  TermDir:  Out  RangeId: 1 Drv: 12  has only 0 sites available on device, but needs 10 sites.
+	Term: Err[2]
+	Term: Err[11]
+	Term: Err[12]
+	Term: segment[0]
+	Term: segment[1]
+	Term: segment[3]
+	Term: segment[5]
+	Term: digcont[0]
+	Term: digcont[2]
+	Term: digselec[1]
+
+
+ IO Group: 1 with : SioStd: LVCMOS18   VCCO = 1.8 Termination: 0  TermDir:  In   RangeId: 1  has only 0 sites available on device, but needs 4 sites.
+	Term: digsel[1]
+	Term: digsel[2]
+	Term: digsel[6]
+	Term: digsel[8]
+
+
+Resolution: Consider using Xilinx part with greater number of IO pins
+ERROR: [Place 30-374] IO placer failed to find a solution
+Below is the partial placement that can be analyzed to see if any constraint modifications will make the IO placement problem easier to solve.
+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                     IO Placement : Bank Stats                                                                           |
++----+-------+-------+------------------------------------------------------------------------+------------------------------------------+--------+--------+--------+-----+
+| Id | Pins  | Terms |                               Standards                                |                IDelayCtrls               |  VREF  |  VCCO  |   VR   | DCI |
++----+-------+-------+------------------------------------------------------------------------+------------------------------------------+--------+--------+--------+-----+
+|  0 |     0 |     0 |                                                                        |                                          |        |        |        |     |
+| 14 |    50 |    24 | LVCMOS33(24)                                                           |                                          |        |  +3.30 |    YES |     |
+| 15 |    50 |     2 | LVCMOS33(2)                                                            |                                          |        |  +3.30 |    YES |     |
+| 34 |    50 |     1 | LVCMOS33(1)                                                            |                                          |        |  +3.30 |    YES |     |
++----+-------+-------+------------------------------------------------------------------------+------------------------------------------+--------+--------+--------+-----+
+|    |   150 |    27 |                                                                        |                                          |        |        |        |     |
++----+-------+-------+------------------------------------------------------------------------+------------------------------------------+--------+--------+--------+-----+
+
+IO Placement:
++--------+----------------------+-----------------+----------------------+----------------------+----------------------+
+| BankId |             Terminal | Standard        | Site                 | Pin                  | Attributes           |
++--------+----------------------+-----------------+----------------------+----------------------+----------------------+
+| 14     | Err[10]              | LVCMOS33        | IOB_X0Y10            | U14                  |                      |
+|        | Err[13]              | LVCMOS33        | IOB_X0Y9             | V14                  |                      |
+|        | Err[14]              | LVCMOS33        | IOB_X0Y8             | V12                  |                      |
+|        | Err[15]              | LVCMOS33        | IOB_X0Y3             | V11                  |                      |
+|        | Err[1]               | LVCMOS33        | IOB_X0Y39            | K15                  |                      |
+|        | Err[3]               | LVCMOS33        | IOB_X0Y33            | N14                  |                      |
+|        | Err[4]               | LVCMOS33        | IOB_X0Y20            | R18                  |                      |
+|        | Err[5]               | LVCMOS33        | IOB_X0Y13            | V17                  |                      |
+|        | Err[6]               | LVCMOS33        | IOB_X0Y17            | U17                  |                      |
+|        | Err[7]               | LVCMOS33        | IOB_X0Y15            | U16                  |                      |
+|        | Err[8]               | LVCMOS33        | IOB_X0Y14            | V16                  |                      |
+|        | Err[9]               | LVCMOS33        | IOB_X0Y23            | T15                  |                      |
+|        | digcont[1]           | LVCMOS33        | IOB_X0Y44            | J18                  |                      |
+|        | digcont[3]           | LVCMOS33        | IOB_X0Y40            | J14                  |                      |
+|        | digneg[0]            | LVCMOS33        | IOB_X0Y26            | P14                  |                      |
+|        | digneg[1]            | LVCMOS33        | IOB_X0Y24            | T14                  |                      |
+|        | digsel[0]            | LVCMOS33        | IOB_X0Y46            | J15                  |                      |
+|        | digsel[3]            | LVCMOS33        | IOB_X0Y25            | R15                  |                      |
+|        | digsel[4]            | LVCMOS33        | IOB_X0Y21            | R17                  |                      |
+|        | digsel[5]            | LVCMOS33        | IOB_X0Y19            | T18                  |                      |
+|        | digsel[7]            | LVCMOS33        | IOB_X0Y12            | R13                  |                      |
+|        | segment[2]           | LVCMOS33        | IOB_X0Y48            | K16                  |                      |
+|        | segment[4]           | LVCMOS33        | IOB_X0Y28            | P15                  |                      |
+|        | segment[6]           | LVCMOS33        | IOB_X0Y41            | L18                  |                      |
++--------+----------------------+-----------------+----------------------+----------------------+----------------------+
+| 15     | Err[0]               | LVCMOS33        | IOB_X0Y54            | H17                  |                      |
+|        | RST                  | LVCMOS33        | IOB_X0Y87            | C12                  | *                    |
++--------+----------------------+-----------------+----------------------+----------------------+----------------------+
+| 34     | digselec[0]          | LVCMOS33        | IOB_X1Y44            | K2                   |                      |
++--------+----------------------+-----------------+----------------------+----------------------+----------------------+
+
+WARNING: [Place 30-87] Partially locked IO Bus is found. Following components of the IO Bus Err are not locked:  'Err[12]'  'Err[11]'  'Err[2]' 
+WARNING: [Place 30-87] Partially locked IO Bus is found. Following components of the IO Bus digcont are not locked:  'digcont[2]'  'digcont[0]' 
+WARNING: [Place 30-87] Partially locked IO Bus is found. Following components of the IO Bus digsel are not locked:  'digsel[8]'  'digsel[6]'  'digsel[2]'  'digsel[1]' 
+WARNING: [Place 30-87] Partially locked IO Bus is found. Following components of the IO Bus digselec are not locked:  'digselec[1]' 
+WARNING: [Place 30-87] Partially locked IO Bus is found. Following components of the IO Bus segment are not locked:  'segment[5]'  'segment[3]'  'segment[1]'  'segment[0]' 
+Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device | Checksum: 19a29a1c7
+
+Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.179 . Memory (MB): peak = 1862.113 ; gain = 0.000
+Phase 1 Placer Initialization | Checksum: 19a29a1c7
+
+Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.180 . Memory (MB): peak = 1862.113 ; gain = 0.000
+ERROR: [Place 30-99] Placer failed with error: 'IO Clock Placer failed'
+Please review all ERROR, CRITICAL WARNING, and WARNING messages during placement to understand the cause for failure.
+Ending Placer Task | Checksum: 19a29a1c7
+
+Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.184 . Memory (MB): peak = 1862.113 ; gain = 0.000
+45 Infos, 5 Warnings, 17 Critical Warnings and 4 Errors encountered.
+place_design failed
+ERROR: [Common 17-69] Command failed: Placer could not place all instances
+INFO: [Common 17-206] Exiting Vivado at Thu Dec 11 13:49:22 2025...

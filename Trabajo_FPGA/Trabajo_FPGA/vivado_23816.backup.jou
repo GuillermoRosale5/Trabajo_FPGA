@@ -1,0 +1,29 @@
+#-----------------------------------------------------------
+# Vivado v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Tue Dec  9 22:29:07 2025
+# Process ID         : 23816
+# Current directory  : C:/Users/LENOVO/Desktop/Trabajo_FPGA
+# Command line       : vivado.exe -gui_launcher_event rodinguilauncherevent9804 C:\Users\LENOVO\Desktop\Trabajo_FPGA\Trabajo_FPGA.xpr
+# Log file           : C:/Users/LENOVO/Desktop/Trabajo_FPGA/vivado.log
+# Journal file       : C:/Users/LENOVO/Desktop/Trabajo_FPGA\vivado.jou
+# Running On         : DESKTOP-599GVPN
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26100
+# Processor Detail   : Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+# CPU Frequency      : 2808 MHz
+# CPU Physical cores : 4
+# CPU Logical cores  : 8
+# Host memory        : 34246 MB
+# Swap memory        : 27917 MB
+# Total Virtual      : 62163 MB
+# Available Virtual  : 49503 MB
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.xpr
+update_compile_order -fileset sources_1
+close [ open C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/sources_1/new/Multiplex.vhd w ]
+add_files C:/Users/LENOVO/Desktop/Trabajo_FPGA/Trabajo_FPGA.srcs/sources_1/new/Multiplex.vhd
+update_compile_order -fileset sources_1

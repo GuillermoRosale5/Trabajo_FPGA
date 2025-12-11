@@ -1,0 +1,116 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 09.12.2025 17:59:45
+-- Design Name: 
+-- Module Name: TOP - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity TOP is
+Port (     button_confir: in STD_LOGIC; --Confirmación de pedido
+           button_10: in STD_LOGIC; --Moneda 10 cents
+           button_20: in STD_LOGIC;--Moneda 20 cents
+           button_50: in STD_LOGIC;--Moneda 50 cents
+           button_1: in STD_LOGIC;--Moneda 1 euro
+           digsel : in STD_LOGIC_VECTOR (8 downto 0); --Los 9 productos que tenemos (switches)
+           
+           CLK    : in std_logic;
+           RST    : in STD_LOGIC;
+           
+           digselec: out std_logic_vector(1 downto 0);   --Display del selector de producto
+           digcont : out STD_LOGIC_VECTOR (3 downto 0);  -- Display del contador
+           digneg: out STD_LOGIC_VECTOR (1 downto 0);    --Mantener apagado el display
+           segment : out STD_LOGIC_VECTOR (6 downto 0);  --Los segmentos del display de los números
+           Err : out STD_LOGIC_VECTOR (15 downto 0)
+           );
+end TOP;
+
+architecture Behavioral of TOP is
+    signal sync: std_logic;
+    signal edge: std_logic;
+    signal rst_s: std_logic;
+    --signal scode: std_logic_vector(3 downto 0); --Variable para el contador
+    signal disp1 : std_logic_vector(6 downto 0);  -- display 1 (led_1)
+    signal disp2 : std_logic_vector(6 downto 0);  -- display 2 (led_2)
+    signal clk_out : std_logic;
+    
+    COMPONENT decoder 
+PORT (         
+           switches : in STD_LOGIC_VECTOR (8 downto 0);
+           led_1: out STD_LOGIC_VECTOR (6 downto 0);
+           led_2:out STD_LOGIC_VECTOR (6 downto 0)
+     ); 
+  END COMPONENT;
+  
+  COMPONENT Multiplex
+    Port (
+        clk      : in  STD_LOGIC;
+        disp1_mult    : in  STD_LOGIC_VECTOR(6 downto 0);
+        disp2_mult    : in  STD_LOGIC_VECTOR(6 downto 0);
+        segment_mult  : out STD_LOGIC_VECTOR(6 downto 0);
+        digselec_mult : out STD_LOGIC_VECTOR(1 downto 0)
+    );
+END COMPONENT;
+
+COMPONENT Prescaler
+port(
+        clk_in  : in  std_logic;   -- 100 MHz
+        rst     : in  std_logic;   -- Reset síncrono
+        clk_out : out std_logic    -- 16 kHz
+    );
+END COMPONENT;
+    
+begin
+
+Inst_Decoder : decoder
+port map(
+    switches => digsel,
+    led_1 => disp1,   -- display selector 1
+    led_2 => disp2    -- display selector 2
+);
+
+Inst_Multi : Multiplex
+port map (
+    clk           => clk_out,
+    disp1_mult    => disp1,
+    disp2_mult    => disp2,
+    segment_mult  => segment,
+    digselec_mult => digselec
+);
+
+Inst_Prescaler : Prescaler
+    port map(
+        clk_in  => clk,
+        rst    => rst,
+        clk_out => clk_out
+    );
+
+digneg <= "11";--Apagar el display
+Err <= (others => '1');
+    
+end Behavioral;
