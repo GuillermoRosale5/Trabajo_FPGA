@@ -22,89 +22,60 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity decoder is
- Port (    code : in STD_LOGIC_VECTOR (3 downto 0);
-           led : out STD_LOGIC_VECTOR (6 downto 0);
-           
-           switches : in STD_LOGIC_VECTOR (8 downto 0);
-           led_1: out STD_LOGIC_VECTOR (6 downto 0);
-           led_2:out STD_LOGIC_VECTOR (6 downto 0)
-                      
-       );
-           
+    Port (
+        switches : in  STD_LOGIC_VECTOR (8 downto 0);
+        led_1    : out STD_LOGIC_VECTOR (6 downto 0);
+        led_2    : out STD_LOGIC_VECTOR (6 downto 0)
+    );
 end decoder;
 
-ARCHITECTURE dataflow OF decoder IS
- BEGIN
-  WITH code SELECT
-   led <=  "0000001" WHEN "0000",
-           "1001111" WHEN "0001",
-           "0010010" WHEN "0010", 
-           "0000110" WHEN "0011", 
-           "1001100" WHEN "0100", 
-           "0100100" WHEN "0101", 
-           "0100000" WHEN "0110", 
-           "0001111" WHEN "0111", 
-           "0000000" WHEN "1000",
-           "0000100" WHEN "1001", 
-           "1111110" WHEN others; 
-           
-   process(switches)
+architecture dataflow of decoder is
 begin
-    if switches(0) = '0' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
-        
-    elsif switches(1) = '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
 
-    elsif switches(2) = '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
+    process(switches)
+    begin
+        if switches = "000000001" then
+            led_1 <= "1110111";
+            led_2 <= "1111110";
 
-    elsif switches(3)= '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
-        
-    elsif switches(4)= '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
-        
-    elsif switches(5)= '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
-        
-    elsif switches(6)= '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
-        
-    elsif switches(7)= '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
-        
-    elsif switches(8)= '1' then
-        led_1 <= "0000001";
-        led_2 <= "0000001";
-        
+        elsif switches = "000000010" then
+            led_1 <= "1110111";
+            led_2 <= "0110000";
 
-    else
-        led <= "0000000";  -- valor por defecto
-    end if;
-    
+        elsif switches = "000000100" then
+            led_1 <= "1110111";
+            led_2 <= "1101101";
 
-    
-end process;        
-       
-    END ARCHITECTURE dataflow; 
-    
-    
+        elsif switches = "000001000" then
+            led_1 <= "0011111";
+            led_2 <= "1111110";
+
+        elsif switches = "000010000" then
+            led_1 <= "0011111";
+            led_2 <= "0110000";
+
+        elsif switches = "000100000" then
+            led_1 <= "0011111";
+            led_2 <= "1101101";
+
+        elsif switches = "001000000" then
+            led_1 <= "0001101";
+            led_2 <= "1111110";
+
+        elsif switches = "010000000" then
+            led_1 <= "0001101";
+            led_2 <= "0110000";
+
+        elsif switches = "100000000" then
+            led_1 <= "0001101";
+            led_2 <= "1101101";
+
+        else
+            led_1 <= "0000000";
+            led_2 <= "0000000";
+        end if;
+
+    end process;
+
+end architecture dataflow;
