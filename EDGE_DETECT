@@ -1,1 +1,126 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 14.12.2025 12:02:41
+-- Design Name: 
+-- Module Name: Edge_Dectector - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
 
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity EDGEDTCTR is
+    Generic(
+            NUM_MONEDAS: positive:= 4
+    );
+
+    Port ( 
+            CLK : in STD_LOGIC;
+           
+           -- BOTONES QUE REQUIEREN DE UN FLANCO para definir un estado de activación
+
+           -- EMTRADAS DE LOS BOTONES
+           SYNC_IN_MONEDAS : in STD_LOGIC_VECTOR (NUM_MONEDAS -1 downto 0);
+           SYNC_IN_CONFIRMACION: in STD_LOGIC;
+           
+           -- SALIDAS como FLANCOS DE SUBIDA
+           EDGE_MONEDAS_DETECTADO : out STD_LOGIC;
+           EDGE_BOTON_PAGO : out STD_LOGIC;
+           
+           -- Vector para monedas, si se detecta que una de las 4 monedas se activa sacamos un vector 
+           -- determinista que define qué moneda ha entrado y lo mantiene encendido hasta 
+           Vector_monedas_deter: out STD_LOGIC_VECTOR (NUM_MONEDAS -1 downto 0)
+           );
+end EDGEDTCTR;
+
+
+architecture Behavioral of EDGEDTCTR is
+
+    -- vectores para evaluar si hay flanco
+    signal sreg_1: std_logic_vector (2 downto 0) := (others => '0');
+    signal sreg_2: std_logic_vector (2 downto 0) := (others => '0');
+    signal sreg_3: std_logic_vector (2 downto 0) := (others => '0');
+    signal sreg_4: std_logic_vector (2 downto 0) := (others => '0');
+    -- registro del boton de confirmacion de pago (renombrado como pediste)
+    signal sreg_boton_pago: std_logic_vector (2 downto 0) := (others => '0');
+
+
+    -- vector candidato a ser el determinista (renombrado como pediste)
+    signal Vect_MONEDAS_POSIBLE_s : std_logic_vector (NUM_MONEDAS -1 downto 0) := (others => '0');
+
+    -- Registros para el Flanco que dura 5 ciclos
+    signal r_edge_monedas : std_logic := '0';
+    signal pulsos_flanco  : unsigned(2 downto 0) := (others => '0');  -- hasta 5
+
+   
+   
+   
+begin
+    process (CLK)
+    begin
+        if rising_edge(CLK) then
+            sreg_1 <= sreg_1(1 downto 0) & SYNC_IN_MONEDAS(0);
+            sreg_2 <= sreg_2(1 downto 0) & SYNC_IN_MONEDAS(1);
+            sreg_3 <= sreg_3(1 downto 0) & SYNC_IN_MONEDAS(2);
+            sreg_4 <= sreg_4(1 downto 0) & SYNC_IN_MONEDAS(3);
+       ------------------------------------------------------------------------------- EDGE DETECTOR DE LA PRÁCTICA 2 PARA EL BOTÓN DE CONFIRMAR
+            sreg_boton_pago <= sreg_boton_pago(1 downto 0) & SYNC_IN_CONFIRMACION;
+            
+        end if;
+    end process;
+    
+    
+    -------------------------------------------------------------------------
+    -- DETECCION DE FLANCO (combinacional, fuera del clk)
+    -------------------------------------------------------------------------
+    with sreg_1 select
+        Vect_MONEDAS_POSIBLE_s(0) <= '1' when "001", '0' when others;
+    with sreg_2 select
+        Vect_MONEDAS_POSIBLE_s(1) <= '1' when "001", '0' when others;
+    with sreg_3 select
+        Vect_MONEDAS_POSIBLE_s(2) <= '1' when "001", '0' when others;
+    with sreg_4 select
+        Vect_MONEDAS_POSIBLE_s(3) <= '1' when "001", '0' when others;
+
+    -- Flanco del boton de pago (antes EDGE_CONFI_DETECTADO)
+    with sreg_boton_pago select
+        EDGE_BOTON_PAGO <= '1' when "001", '0' when others;
+
+                
+ process (Vect_MONEDAS_POSIBLE_s)
+    begin        
+    
+        -- Si hay exactamente una moneda
+        if (Vect_MONEDAS_POSIBLE_s = "0001" or
+            Vect_MONEDAS_POSIBLE_s = "0010" or
+            Vect_MONEDAS_POSIBLE_s = "0100" or
+            Vect_MONEDAS_POSIBLE_s = "1000") 
+            then
+                pulsos_flanco  <= to_unsigned(5, pulsos_flanco'length);
+
+            elsif pulsos_flanco /= 0 then
+                pulsos_flanco <= pulsos_flanco - 1;
+            end if;
+
+            -- Señal de flanco de 5 clocks
+            if pulsos_flanco /= 0 then
+                r_edge_monedas <= '1';
+            else
+                r_edge_monedas <= '0';
+            end if;
+
+    end process;
