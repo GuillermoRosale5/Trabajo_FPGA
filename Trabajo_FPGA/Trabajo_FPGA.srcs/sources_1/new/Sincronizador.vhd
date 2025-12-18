@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 08.12.2025 18:31:04
+-- Create Date: 13.12.2025 10:59:39
 -- Design Name: 
 -- Module Name: Sincronizador - Behavioral
 -- Project Name: 
@@ -18,34 +18,65 @@
 -- 
 ----------------------------------------------------------------------------------
 
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+entity SINCRONIZADOR is
+    generic(
+        NUM_MONEDAS: positive:= 4;
+        NUM_PRODUCTOS: positive:= 9
+    );
+    
+    port(
+        CLK: in std_logic;
+        -- ENTRADAS ASINCRONAS DE LOS BOTONES Y SWITCHES
+        AS_PRODUCTOS: in std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
+        AS_MONEDAS: in std_logic_vector (NUM_MONEDAS - 1 downto 0); 
+        AS_CONFI : in std_logic;
+        -- SALIDAS SINCRONAS DE LOS BOTONES Y SWITCHES       
+        S_PRODUCTOS: out std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
+        S_MONEDAS: out std_logic_vector (NUM_MONEDAS - 1 downto 0);
+        S_CONFI : out std_logic
 
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+    );   
+    
+         
+end SINCRONIZADOR;
 
-entity Sincronizador is
- Port ( CLK : in STD_LOGIC;
-           ASYNC_IN : in STD_LOGIC;
-           SYNC_OUT : out STD_LOGIC);
-end Sincronizador;
+architecture Behavioral of SINCRONIZADOR is
 
-architecture Behavioral of Sincronizador is
-signal sreg: std_logic_vector(1 downto 0);
+    signal REG1_PRODUCTOS: std_logic_vector (NUM_PRODUCTOS - 1 downto 0);    
+    signal REG1_MONEDAS: std_logic_vector(NUM_MONEDAS - 1 downto 0);
+    signal REG1_CONFI: std_logic;
+
+    signal REG2_PRODUCTOS: std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
+    signal REG2_MONEDAS: std_logic_vector(NUM_MONEDAS - 1 downto 0);
+    signal REG2_CONFI: std_logic;  
+
 begin
-    process (CLK)
+
+    REGISTRO_1: process(CLK)
     begin
         if rising_edge(CLK) then
-        sync_out <= sreg(1);
-        sreg <= sreg(0) & async_in;
+            REG1_PRODUCTOS<= AS_PRODUCTOS;
+            REG1_MONEDAS<= AS_MONEDAS;
+            REG1_CONFI <= AS_CONFI;
+            
+        end if;
+    end process;
+    
+    REGISTRO_2:process(CLK)
+    begin
+        if rising_edge(CLK) then
+            REG2_PRODUCTOS<= REG1_PRODUCTOS;        
+            REG2_MONEDAS<= REG1_MONEDAS;
+            REG2_CONFI <= REG1_CONFI;
         end if;
     end process;
 
+    S_MONEDAS <= REG2_MONEDAS;
+    S_PRODUCTOS<= REG2_PRODUCTOS;
+    S_CONFI <= REG2_CONFI;
+    
 end Behavioral;
