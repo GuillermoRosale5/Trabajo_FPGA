@@ -1,1 +1,107 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 14.12.2025 10:13:13
+-- Design Name: 
+-- Module Name: contador_monedas - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
 
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity contador_monedas is
+ port(
+        clk            : in  std_logic;
+        edge_monedas   : in  std_logic; -- flanco que indica que la moneda se ha metido
+        edge_confir    : in  std_logic; -- boton de confirmar el pago cuando se hayan metido todas las monedas
+        monedas        : in  std_logic_vector(3 downto 0); -- vector que representa qué moneda se ha metido (10, 20, 50, 1€)
+        estado         : in  std_logic_vector(2 downto 0); -- Entrada de la FSM que indica el estado global
+
+        faltan_monedas : out unsigned(3 downto 0); -- Número de monedas que falta, de cara al DISPLAY para que pueda mostrarlo por pantalla
+        ok             : out std_logic; -- Señal para la FSM de que el pago se ha podido realizar correctamente
+        error          : out std_logic -- Señal para la FSM de que el pago ha sido erroneo, por pasarse o quedarse corto con el importe
+    );
+end contador_monedas;
+
+architecture Behavioral of contador_monedas is
+
+  signal faltan_reg : unsigned(3 downto 0) := to_unsigned(10, 5);
+  signal resta      : unsigned(3 downto 0);
+  signal ok_s         : std_logic := '0' ;
+  signal error_s      : std_logic:= '0' ;
+
+begin
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+
+            -- LÓGICA DE REINICIO (Estado 0 = "000")
+            if estado = "000" then
+                faltan_reg <= to_unsigned(10, 5);
+                ok_s    <= '0';
+                error_s <= '0';
+            end if; 
+
+            -- LÓGICA DE OPERACIÓN (solo si estamos en el ESTADO 1 = "001")
+            if estado = "001" then
+
+                    -- inserción de moneda
+                    if edge_monedas = '1' then
+
+                        resta <= (others => '0');
+
+                        -- Lógica para determinar el valor de la resta
+                        if monedas(0) = '1' then
+                            resta <= to_unsigned(1, 5);
+                        elsif monedas(1) = '1' then
+                            resta <= to_unsigned(2, 5);
+                        elsif monedas(2) = '1' then
+                            resta <= to_unsigned(5, 5);
+                        elsif monedas(3) = '1' then
+                            resta <= to_unsigned(10, 5);
+                        end if;
+
+
+                        if faltan_reg > resta then
+                            faltan_reg <= faltan_reg - resta;
+                        elsif faltan_reg = resta then
+                            faltan_reg <= (others => '0');
+                        else
+                            faltan_reg <= to_unsigned(15, 5); -- Se mantiene 20 por ahora
+                        end if;
+
+                    -- Si se le da a pagar y se ha pagado todo (faltan =0) entonces damos un OK,
+                    -- si nos hemos pasado o nos hemos quedado cortos mandamos un error
+                    elsif edge_confir = '1' then -- BOTON DE PAGAR
+                        if faltan_reg = 0 then
+                            ok_s <= '1'; 
+                            error_s <= '0'; -- mensaje de ok que nos llevaria al estado 2 (EXPRENDER PRODUCTO)
+                        else
+                            ok_s <= '0'; 
+                            error_s <= '1'; -- mensaje de error que nos llevaria al estado 4 (Error Pago)
+                        end if;
+                    end if;
+            end if;
+        end if;
+    end process;
+
+    faltan_monedas <= faltan_reg;
+    ok <= ok_s;                   -- TENER EN CUENTA QUE ESTO SE MANTIENE HASTA QUE VOLVAMOS A ESTADO 0
+    error <= error_s;             -- esto igual (aqui tiene mas sentido)
+
+end Behavioral;
