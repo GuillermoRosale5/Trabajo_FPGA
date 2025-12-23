@@ -1,31 +1,11 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 14.12.2025 12:02:41
--- Design Name: 
--- Module Name: Edge_Dectector - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
-
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity EDGEDTCTR is
     Generic(
-            NUM_MONEDAS: positive:= 4
+            NUM_MONEDAS: positive:= 4;
+            NUM_PULSOS: positive := 5
     );
 
     Port ( 
@@ -50,22 +30,31 @@ end EDGEDTCTR;
 
 architecture Behavioral of EDGEDTCTR is
 
-    -- vectores para evaluar si hay flanco
+    -- DETECCION DE FLANCO CON VECTORES DE 3 BITS ( van desplazandose temporalmente)
+    -- Registros para los botones de monedas ( 10, 20 , 50 y 1€)
     signal sreg_1: std_logic_vector (2 downto 0) := (others => '0');
     signal sreg_2: std_logic_vector (2 downto 0) := (others => '0');
     signal sreg_3: std_logic_vector (2 downto 0) := (others => '0');
     signal sreg_4: std_logic_vector (2 downto 0) := (others => '0');
     -- registro del boton de confirmacion de pago (renombrado como pediste)
     signal sreg_boton_pago: std_logic_vector (2 downto 0) := (others => '0');
-
-
-    -- vector candidato a ser el determinista (renombrado como pediste)
+    
+    
+    -- vector candidato a ser el determinista (el que queda permanente para avisar al contador de qué moneda es)
+    -- Esto del determinismo se hace por una cuestion de seguridad, NO QUEREMOS 2 monedas al mismo tiempo
     signal Vect_MONEDAS_POSIBLE_s : std_logic_vector (NUM_MONEDAS -1 downto 0) := (others => '0');
-
-    -- Registros para el Flanco que dura 5 ciclos
+    signal Vect_MONEDAS_DETERMINISTA : std_logic_vector (NUM_MONEDAS -1 downto 0) := (others => '0');
+    
+    
+    -- FLANCOS DE 5 CLOCKS DE ACTIVACION
+    -- Registros para el Flanco de MONEDAS que dura 5 ciclos
     signal r_edge_monedas : std_logic := '0';
-    signal pulsos_flanco  : unsigned(2 downto 0) := (others => '0');  -- hasta 5
+    signal pulsos_flanco_monedas  : unsigned(NUM_PULSOS-1 downto 0) := (others => '0');  -- hasta 5
+    -- Registros para el Flanco DEL BOTON CONFIRMAR PAGO que dura 5 ciclos
+    signal r_edge_boton_pago : std_logic := '0';
+    signal pulsos_flanco_boton  : unsigned(NUM_PULSOS-1 downto 0) := (others => '0');  -- hasta 5
 
+    
    
    
    
@@ -87,6 +76,7 @@ begin
     -------------------------------------------------------------------------
     -- DETECCION DE FLANCO (combinacional, fuera del clk)
     -------------------------------------------------------------------------
+    
     with sreg_1 select
         Vect_MONEDAS_POSIBLE_s(0) <= '1' when "001", '0' when others;
     with sreg_2 select
@@ -96,31 +86,88 @@ begin
     with sreg_4 select
         Vect_MONEDAS_POSIBLE_s(3) <= '1' when "001", '0' when others;
 
-    -- Flanco del boton de pago (antes EDGE_CONFI_DETECTADO)
-    with sreg_boton_pago select
-        EDGE_BOTON_PAGO <= '1' when "001", '0' when others;
 
-                
- process (Vect_MONEDAS_POSIBLE_s)
-    begin        
-    
-        -- Si hay exactamente una moneda
-        if (Vect_MONEDAS_POSIBLE_s = "0001" or
-            Vect_MONEDAS_POSIBLE_s = "0010" or
-            Vect_MONEDAS_POSIBLE_s = "0100" or
-            Vect_MONEDAS_POSIBLE_s = "1000") 
-            then
-                pulsos_flanco  <= to_unsigned(5, pulsos_flanco'length);
 
-            elsif pulsos_flanco /= 0 then
-                pulsos_flanco <= pulsos_flanco - 1;
-            end if;
 
-            -- Señal de flanco de 5 clocks
-            if pulsos_flanco /= 0 then
-                r_edge_monedas <= '1';
+
+-- Pulso estirado 5 clocks para BOTÓN PAGO (depende de CLK para poder contar los 5 clks) 
+    process (CLK)
+    begin
+        if rising_edge(CLK) then
+
+            if pulsos_flanco_boton = to_unsigned(0, NUM_PULSOS) then
+                if sreg_boton_pago = "001" then
+                    pulsos_flanco_boton <= to_unsigned(NUM_PULSOS, NUM_PULSOS);
+                    r_edge_boton_pago   <= '1';
+                else
+                    r_edge_boton_pago <= '0';
+                end if;
+
             else
-                r_edge_monedas <= '0';
+                if pulsos_flanco_boton = to_unsigned(1, NUM_PULSOS) then
+                    pulsos_flanco_boton <= (others => '0');
+                    r_edge_boton_pago   <= '0';
+                else
+                    pulsos_flanco_boton <= pulsos_flanco_boton - 1;                                 -- RESTA
+                    r_edge_boton_pago   <= '1';
+                end if;
             end if;
 
+        end if;
     end process;
+
+
+    -- Pulso estirado 5 clocks para MONEDAS + vector determinista
+    process (CLK)
+    begin
+        if rising_edge(CLK) then
+
+            -- PAGO ANULA MONEDAS
+            if (sreg_boton_pago = "001") or
+               (pulsos_flanco_boton /= to_unsigned(0, NUM_PULSOS)) then
+
+                pulsos_flanco_monedas     <= (others => '0');
+                r_edge_monedas            <= '0';
+                Vect_MONEDAS_DETERMINISTA <= (others => '0');
+
+            else
+                if pulsos_flanco_monedas = to_unsigned(0, NUM_PULSOS) then
+
+                    if (Vect_MONEDAS_POSIBLE_s = "0001" or
+                        Vect_MONEDAS_POSIBLE_s = "0010" or
+                        Vect_MONEDAS_POSIBLE_s = "0100" or
+                        Vect_MONEDAS_POSIBLE_s = "1000") then
+
+                        pulsos_flanco_monedas     <= to_unsigned(NUM_PULSOS, NUM_PULSOS);
+                        r_edge_monedas            <= '1';
+                        Vect_MONEDAS_DETERMINISTA <= Vect_MONEDAS_POSIBLE_s;
+
+                    else
+                        r_edge_monedas            <= '0';
+                        Vect_MONEDAS_DETERMINISTA <= (others => '0');
+                    end if;
+
+                else
+                    if pulsos_flanco_monedas = to_unsigned(1, NUM_PULSOS) then
+                        pulsos_flanco_monedas     <= (others => '0');
+                        r_edge_monedas            <= '0';
+                        Vect_MONEDAS_DETERMINISTA <= (others => '0');
+                    else
+                        pulsos_flanco_monedas <= pulsos_flanco_monedas - 1;
+                        r_edge_monedas        <= '1';
+                    end if;
+                end if;
+
+            end if;
+
+        end if;
+    end process;
+
+
+    -- Salidas desde registros (lo que se estira es el registro)
+    EDGE_MONEDAS_DETECTADO <= r_edge_monedas;
+    EDGE_BOTON_PAGO        <= r_edge_boton_pago;
+    Vector_monedas_deter   <= Vect_MONEDAS_DETERMINISTA;
+
+end Behavioral;
+
