@@ -1,0 +1,80 @@
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity stock is
+    generic (
+        NUM_PRODUCTOS : positive := 9;
+        PROD_BITS     : positive := 4   -- permite codificar hasta 9 productos
+    );
+    port(
+        clk            : in  std_logic;
+        estado         : in  std_logic_vector(2 downto 0);
+        productos      : in  std_logic_vector(NUM_PRODUCTOS-1 downto 0);
+        error_pago     : in  std_logic;
+
+        productoOk     : out std_logic;
+        errorProducto  : out std_logic;
+        producto_id    : out unsigned(PROD_BITS-1 downto 0)  --prod. determinista 
+    );
+end stock;
+
+architecture Behavioral of stock is
+
+    -- memoria de stock (9 productos)
+    type stock_array_t is array (0 to NUM_PRODUCTOS-1) of unsigned(3 downto 0);
+
+    signal stock_mem : stock_array_t :=
+    (
+        to_unsigned(5,4), -- producto 0        le digo cuanto stock tiene cada producto
+        to_unsigned(3,4), -- producto 1
+        to_unsigned(7,4), -- producto 2
+        to_unsigned(2,4), -- producto 3
+        to_unsigned(4,4), -- producto 4
+        to_unsigned(6,4), -- producto 5
+        to_unsigned(1,4), -- producto 6
+        to_unsigned(8,4), -- producto 7
+        to_unsigned(9,4)  -- producto 8
+    );
+
+    signal producto_sel : unsigned(PROD_BITS-1 downto 0);
+    signal idx     : integer range 0 to NUM_PRODUCTOS-1;  --para encontrar que producto me piden
+
+begin
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+
+            -- salidas por defecto (pulsos)
+            productoOk    <= '0';
+            errorProducto <= '0';
+
+            -- solo en estado 0 y sin error de pago
+            if estado = "000" and error_pago = '0' then
+
+                -- decodificación one-hot del producto
+                for i in 0 to NUM_PRODUCTOS-1 loop
+                    if productos(i) = '1' then
+                        producto_sel <= to_unsigned(i, PROD_BITS);
+                        idx <= i;
+                    end if;
+                end loop;
+
+                -- comprobación y actualización de stock
+                if stock_mem(idx) > 0 then
+                    stock_mem(idx) <= stock_mem(idx) - 1;
+                    productoOk <= '1';
+                else
+                    errorProducto <= '1';
+                end if;
+
+            end if;
+        end if;
+    end process;
+
+    -- salida determinista del producto
+    producto_id <= producto_sel;
+
+end Behavioral;
