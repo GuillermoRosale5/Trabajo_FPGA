@@ -1,7 +1,6 @@
--- ENTIDAD TOP
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -13,50 +12,74 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity TOP is
-Port (     button_confir: in STD_LOGIC; --Confirmación de pedido
-           button_10: in STD_LOGIC; --Moneda 10 cents
-           button_20: in STD_LOGIC;--Moneda 20 cents
-           button_50: in STD_LOGIC;--Moneda 50 cents
-           button_1: in STD_LOGIC;--Moneda 1 euro
+generic (
+        Monedas       : POSITIVE := 4;   -- genérico con valor por defecto 4
+        NUM_PRODUCTOS : POSITIVE := 9;   -- genérico con valor por defecto 9
+        NUM_DIGITS    : positive := 8;
+        NUM_SEGS      : positive := 8;   -- antes 7, ahora 8 (anodos + punto)
+        NUM_PULSOS_TOP: positive := 5
+    );
+
+Port (     
+           button_confir: in STD_LOGIC; --Confirmación de pedido
+           vector_botones_monedas : in std_logic_vector (MONEDAS-1 downto 0);
+           
+           
            digsel : in STD_LOGIC_VECTOR (8 downto 0); --Los 9 productos que tenemos (switches)
            
            CLK    : in std_logic;
            RST    : in STD_LOGIC;
+           digselec      : out std_logic_vector(NUM_DIGITS-1 downto 0);
+           segment       : out STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
            
-           digselec: out std_logic_vector(1 downto 0);   --Display del selector de producto
-           digcont : out STD_LOGIC_VECTOR (3 downto 0);  -- Display del contador
-           digneg: out STD_LOGIC_VECTOR (1 downto 0);    --Mantener apagado el display
-           segment : out STD_LOGIC_VECTOR (6 downto 0);  --Los segmentos del display de los números
+           
            Err : out STD_LOGIC_VECTOR (15 downto 0)
            );
 end TOP;
 
 architecture Behavioral of TOP is
-    signal sync: std_logic;
-    signal edge: std_logic;
-    signal rst_s: std_logic;
-    --signal scode: std_logic_vector(3 downto 0); --Variable para el contador
-    signal disp1 : std_logic_vector(6 downto 0);  -- display 1 (led_1)
-    signal disp2 : std_logic_vector(6 downto 0);  -- display 2 (led_2)
+    
     signal clk_out : std_logic;
     
-    COMPONENT decoder 
-PORT (         
-           switches : in STD_LOGIC_VECTOR (8 downto 0);
-           led_1: out STD_LOGIC_VECTOR (6 downto 0);
-           led_2:out STD_LOGIC_VECTOR (6 downto 0)
-     ); 
-  END COMPONENT;
-  
-  COMPONENT Multiplex
-    Port (
-        clk      : in  STD_LOGIC;
-        disp1_mult    : in  STD_LOGIC_VECTOR(6 downto 0);
-        disp2_mult    : in  STD_LOGIC_VECTOR(6 downto 0);
-        segment_mult  : out STD_LOGIC_VECTOR(6 downto 0);
-        digselec_mult : out STD_LOGIC_VECTOR(1 downto 0)
-    );
-END COMPONENT;
+    -- SEÑALES DEL FSM
+    signal estado_s       : std_logic_vector(2 downto 0);
+    
+    
+    
+    -- SEÑALES MULTIPLEXOR     -------------------------------------------
+    -- SEÑALES PARA LOS DIGITOS DEL DISPLAY, de tamaño 8 bits porque el último es el punto del dígito.
+    -- Sirven como nexo entre el CTRL_DISPLAY y el Multiplexor que es quien se comunica con el HW
+        signal DISP_DIG1_s    : std_logic_vector(NUM_SEGS-1 downto 0);
+        signal DISP_DIG2_s    : std_logic_vector(NUM_SEGS-1 downto 0);
+        signal DISP_DIG3_s    : std_logic_vector(NUM_SEGS-1 downto 0);
+        signal DISP_DIG4_s    : std_logic_vector(NUM_SEGS-1 downto 0);
+        signal DISP_DIG5_s    : std_logic_vector(NUM_SEGS-1 downto 0);
+        signal DISP_DIG6_s    : std_logic_vector(NUM_SEGS-1 downto 0);
+        signal DISP_DIG7_s    : std_logic_vector(NUM_SEGS-1 downto 0);
+        signal DISP_DIG8_s    : std_logic_vector(NUM_SEGS-1 downto 0);  
+    --Vector de los digitos síncrono, que permite al multiplexor decirle al HW qué digito activa por señal temporal
+        signal dig_sel_sinc: STD_LOGIC_VECTOR (8 downto 0);
+     
+        
+    -- Señales SINCRONIZADOR salida
+    signal vector_productos_sinc       : std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
+    signal vector_monedas_sinc         : std_logic_vector(Monedas-1 downto 0);
+    signal boton_PAGO_sinc             : std_logic;
+
+    -- Señales EDGEDTCTR salida
+    signal edge_monedas_s              : std_logic;
+    signal vector_monedas_deter_s      : std_logic_vector(Monedas-1 downto 0);
+    signal edge_boton_pago_s           : std_logic;
+
+    -- Señales Contador salida
+    signal faltan_monedas_s : unsigned(3 downto 0);
+    signal ok_s, error_s       : std_logic;    
+        
+    -- Señales STOCK salida
+    signal productoOk_s     : std_logic;
+    signal errorProducto_s  : std_logic;
+    signal producto_id_s    : unsigned(3 downto 0);
+        
 
 COMPONENT Prescaler
 port(
@@ -65,24 +88,122 @@ port(
         clk_out : out std_logic    -- 16 kHz
     );
 END COMPONENT;
+
+COMPONENT Sincronizador
+ Generic(
+        NUM_PRODUCTOS: POSITIVE;
+        NUM_MONEDAS: POSITIVE      
+    );
+ port(
+        CLK: in std_logic;
+        
+        AS_PRODUCTOS: in std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
+        AS_MONEDAS: in std_logic_vector (NUM_MONEDAS - 1 downto 0); 
+        AS_CONFI : in std_logic;
+               
+        S_PRODUCTOS: out std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
+        S_MONEDAS: out std_logic_vector (NUM_MONEDAS - 1 downto 0);
+        S_CONFI : out std_logic
+    ); 
+END COMPONENT;
+
+component EDGEDTCTR is
+        Generic(
+            NUM_MONEDAS  : positive; 
+            NUM_PULSOS   : positive 
+        );
+        Port(
+            CLK : in STD_LOGIC;
+
+            SYNC_IN_MONEDAS        : in STD_LOGIC_VECTOR (NUM_MONEDAS -1 downto 0);
+            SYNC_IN_CONFIRMACION   : in STD_LOGIC;
+
+            EDGE_MONEDAS_DETECTADO : out STD_LOGIC;
+            EDGE_BOTON_PAGO        : out STD_LOGIC;
+
+            Vector_monedas_deter   : out STD_LOGIC_VECTOR (NUM_MONEDAS -1 downto 0)
+        );
+    end component;
+
+    component contador_monedas is
+        port(
+            clk            : in  std_logic;
+            edge_monedas   : in  std_logic;
+            edge_confir    : in  std_logic;
+            monedas        : in  std_logic_vector(3 downto 0);
+            estado         : in  std_logic_vector(2 downto 0);
+
+            faltan_monedas : out unsigned(3 downto 0);
+            ok             : out std_logic;
+            error          : out std_logic
+        );
+    end component;
+
+component stock is
+        generic (
+            NUM_PRODUCTOS : positive := 9;
+            PROD_BITS     : positive := 4
+        );
+        port(
+            clk            : in  std_logic;
+            estado         : in  std_logic_vector(2 downto 0);
+            productos      : in  std_logic_vector(NUM_PRODUCTOS-1 downto 0);
+            error_pago     : in  std_logic;
+
+            productoOk     : out std_logic;
+            errorProducto  : out std_logic;
+            producto_id    : out unsigned(PROD_BITS-1 downto 0)
+        );
+    end component;
+
+
+ component Multiplex is
+        generic (
+            NUM_DIGITS :positive ;
+            NUM_SEGS   :positive 
+        );
+        port (
+            clk           : in  STD_LOGIC;
+
+            DISP_DIG1     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            DISP_DIG2     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            DISP_DIG3     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            DISP_DIG4     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            DISP_DIG5     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            DISP_DIG6     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            DISP_DIG7     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            DISP_DIG8     : in  STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+
+            segment_mult  : out STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
+            digselec_mult : out STD_LOGIC_VECTOR(NUM_DIGITS-1 downto 0)
+        );
+end component;
+
+ component ctr_display is
+        generic(
+            NUM_SEGS : positive
+        );
+        port(
+            clk : in  std_logic;
+            estado         : in  std_logic_vector(2 downto 0);
+            productos      : in  std_logic_vector(8 downto 0);
+            faltan_monedas : in  unsigned(3 downto 0);
+
+            DISP_DIG1      : out std_logic_vector(NUM_SEGS-1 downto 0);
+            DISP_DIG2      : out std_logic_vector(NUM_SEGS-1 downto 0);
+            DISP_DIG3      : out std_logic_vector(NUM_SEGS-1 downto 0);
+            DISP_DIG4      : out std_logic_vector(NUM_SEGS-1 downto 0);
+            DISP_DIG5      : out std_logic_vector(NUM_SEGS-1 downto 0);
+            DISP_DIG6      : out std_logic_vector(NUM_SEGS-1 downto 0);
+            DISP_DIG7      : out std_logic_vector(NUM_SEGS-1 downto 0);
+            DISP_DIG8      : out std_logic_vector(NUM_SEGS-1 downto 0)
+        );
+    end component;
+
+    
+
     
 begin
-
-Inst_Decoder : decoder
-port map(
-    switches => digsel,
-    led_1 => disp1,   -- display selector 1
-    led_2 => disp2    -- display selector 2
-);
-
-Inst_Multi : Multiplex
-port map (
-    clk           => clk_out,
-    disp1_mult    => disp1,
-    disp2_mult    => disp2,
-    segment_mult  => segment,
-    digselec_mult => digselec
-);
 
 Inst_Prescaler : Prescaler
     port map(
@@ -91,7 +212,122 @@ Inst_Prescaler : Prescaler
         clk_out => clk_out
     );
 
-digneg <= "11";--Apagar el display
+   -- SINCRONIZADOR
+	
+Inst_Sincronizador : Sincronizador
+        generic map(
+            NUM_PRODUCTOS => NUM_PRODUCTOS,
+            NUM_MONEDAS   => Monedas
+        )
+        port map(
+            CLK          => clk_out,
+            AS_PRODUCTOS => digsel,
+            AS_MONEDAS   => vector_botones_monedas,
+            AS_CONFI     => button_confir,
+            S_PRODUCTOS  => dig_sel_sinc,
+            S_MONEDAS    => vector_monedas_sinc,
+            S_CONFI      => boton_PAGO_sinc
+        );
+
+    -- EDGE DETECTOR
+    inst_EDGE_DETECT : EDGEDTCTR
+        generic map(
+            NUM_MONEDAS => 4,
+            NUM_PULSOS => NUM_PULSOS_TOP
+        )
+        port map(
+            CLK                    => clk_out,           
+            SYNC_IN_MONEDAS        => vector_monedas_sinc,
+            SYNC_IN_CONFIRMACION   => boton_PAGO_sinc,
+
+            EDGE_MONEDAS_DETECTADO => edge_monedas_s,
+            EDGE_BOTON_PAGO        => edge_boton_pago_s,
+            Vector_monedas_deter   => vector_monedas_deter_s
+        );
+
+    -- CONTADOR MONEDAS
+    Inst_Contador : contador_monedas
+        port map(
+            clk            => clk_out,
+            edge_monedas   => edge_monedas_s,
+            edge_confir    => edge_boton_pago_s,
+            monedas        => vector_monedas_deter_s,
+            estado         => estado_s,
+            
+            faltan_monedas => faltan_monedas_s,
+            ok             => ok_s,
+            error          => error_s
+        );
+
+        Inst_Stock : stock
+        generic map(
+            NUM_PRODUCTOS => 9,
+            PROD_BITS     => 4
+        )
+        port map(
+            clk            => clk_out,
+            estado         => estado_s,
+            productos      => dig_sel_sinc,
+            error_pago     => error_s,
+
+            productoOk     => productoOk_s,
+            errorProducto  => errorProducto_s,
+            producto_id    => producto_id_s
+        );
+
+    
+    
+    
+    Inst_CTR_Display : ctr_display
+        generic map(
+            NUM_SEGS => NUM_SEGS
+        )
+        port map(
+            clk            => clk_out,
+            estado          => estado_s,
+            productos       => dig_sel_sinc,
+            faltan_monedas  => faltan_monedas_s,
+
+            DISP_DIG1       => DISP_DIG1_s,
+            DISP_DIG2       => DISP_DIG2_s,
+            DISP_DIG3       => DISP_DIG3_s,
+            DISP_DIG4       => DISP_DIG4_s,
+            DISP_DIG5       => DISP_DIG5_s,
+            DISP_DIG6       => DISP_DIG6_s,
+            DISP_DIG7       => DISP_DIG7_s,
+            DISP_DIG8       => DISP_DIG8_s
+        );
+        
+        
+Inst_Multi : Multiplex
+        generic map(
+            NUM_DIGITS => NUM_DIGITS,
+            NUM_SEGS   => NUM_SEGS
+        )
+        port map(
+            clk           => clk_out,
+
+            DISP_DIG1     => DISP_DIG1_s,
+            DISP_DIG2     => DISP_DIG2_s,
+            DISP_DIG3     => DISP_DIG3_s,
+            DISP_DIG4     => DISP_DIG4_s,
+            DISP_DIG5     => DISP_DIG5_s,
+            DISP_DIG6     => DISP_DIG6_s,
+            DISP_DIG7     => DISP_DIG7_s,
+            DISP_DIG8     => DISP_DIG8_s,
+
+            segment_mult  => segment,
+            digselec_mult => digselec
+        );
+    
+ 
+       
 Err <= (others => '1');
+
+estado_s <= "000";
+faltan_monedas_s <= (others => '0');
+    
+    
     
 end Behavioral;
+
