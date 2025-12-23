@@ -1,0 +1,195 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity ctr_display is
+    generic(
+        NUM_SEGS : positive :=8
+    );
+    port(
+        clk : in  std_logic;
+        estado          : in  std_logic_vector(2 downto 0);
+        productos       : in  std_logic_vector(8 downto 0);
+        faltan_monedas  : in  unsigned(3 downto 0);
+
+        -- Digitos que salen directos al multiplexor
+        DISP_DIG1       : out std_logic_vector(NUM_SEGS-1 downto 0);
+        DISP_DIG2       : out std_logic_vector(NUM_SEGS-1 downto 0);
+        DISP_DIG3       : out std_logic_vector(NUM_SEGS-1 downto 0);
+        DISP_DIG4       : out std_logic_vector(NUM_SEGS-1 downto 0);
+        DISP_DIG5       : out std_logic_vector(NUM_SEGS-1 downto 0);
+        DISP_DIG6       : out std_logic_vector(NUM_SEGS-1 downto 0);
+        DISP_DIG7       : out std_logic_vector(NUM_SEGS-1 downto 0);
+        DISP_DIG8       : out std_logic_vector(NUM_SEGS-1 downto 0)
+    );
+end ctr_display;
+
+architecture Behavioral of ctr_display is
+begin
+
+    process(clk)
+        variable d1, d2, d3, d4, d5, d6, d7, d8 : std_logic_vector(NUM_SEGS-1 downto 0);
+        variable prod_letra : std_logic_vector(NUM_SEGS-1 downto 0);
+        variable prod_num   : std_logic_vector(NUM_SEGS-1 downto 0);
+        variable monedas_centenas : std_logic_vector(NUM_SEGS-1 downto 0);
+        variable monedas_decenas  : std_logic_vector(NUM_SEGS-1 downto 0);
+        
+    begin
+        if rising_edge(clk) then
+        d1 := (others => '0');
+        d2 := (others => '0');
+        d3 := (others => '0');
+        d4 := (others => '0');
+        d5 := (others => '0');
+        d6 := (others => '0');
+        d7 := (others => '0');
+        d8 := (others => '0');
+
+        prod_letra := (others => '0');
+        prod_num   := (others => '0');
+      
+        monedas_centenas := (others => '0');
+        monedas_decenas := (others => '0');
+        
+        
+
+
+        -- Según producto descodificamos:
+        --     A   B   C
+        --    000 000 000
+        --    012 012 012
+        
+        
+        if productos = "000000001" then                             
+            prod_letra := "11101110"; prod_num := "11111100";         -- A0
+        elsif productos = "000000010" then
+            prod_letra := "11101110"; prod_num := "01100000";         -- A1
+        elsif productos = "000000100" then
+            prod_letra := "11101110"; prod_num := "11011010";         -- A2
+        elsif productos = "000001000" then
+            prod_letra := "00111110"; prod_num := "11111100";         -- B0
+        elsif productos = "000010000" then
+            prod_letra := "00111110"; prod_num := "01100000";         -- B1
+        elsif productos = "000100000" then
+            prod_letra := "00111110"; prod_num := "11011010";         -- B2
+        elsif productos = "001000000" then
+            prod_letra := "00011010"; prod_num := "11111100";         -- C0
+        elsif productos = "010000000" then
+            prod_letra := "00011010"; prod_num := "01100000";         -- C1
+        elsif productos = "100000000" then
+            prod_letra := "00011010"; prod_num := "11011010";         -- C2
+        else
+            prod_letra := "00000000"; prod_num := "00000000";         -- 00
+        end if;
+        
+        -- MONEDAS, en un vector de 2 bits, para poner euros y se cuenta en número de monedas de 10 cents: 
+        --                                                                                                      1.0 -> 10 monedas
+        --                                                                                                      0.1 -> 1 moneda
+        case faltan_monedas is
+            when "0000" =>
+                monedas_centenas := "11111101"; monedas_decenas := "11111100"; -- 0.0
+            when "0001" =>
+                monedas_centenas := "11111101"; monedas_decenas := "01100000"; -- 0.1
+            when "0010" =>
+                monedas_centenas := "11111101"; monedas_decenas := "11011010"; -- 0.2
+            when "0011" =>
+                monedas_centenas := "11111101"; monedas_decenas := "11110010"; -- 0.3
+            when "0100" =>
+                monedas_centenas := "11111101"; monedas_decenas := "01100110"; -- 0.4
+            when "0101" =>
+                monedas_centenas := "11111101"; monedas_decenas := "10110110"; -- 0.5
+            when "0110" =>
+                monedas_centenas := "11111101"; monedas_decenas := "10111110"; -- 0.6
+            when "0111" =>
+                monedas_centenas := "11111101"; monedas_decenas := "11100000"; -- 0.7
+            when "1000" =>
+                monedas_centenas := "11111101"; monedas_decenas := "11111110"; -- 0.8
+            when "1001" =>
+                monedas_centenas := "11111101"; monedas_decenas := "11110110"; -- 0.9
+            when "1010" =>
+                monedas_centenas := "01100001"; monedas_decenas := "11111100"; -- 1.0
+            when others =>
+                monedas_centenas := "11111111"; monedas_decenas := "11111110"; -- ERROR
+        end case;
+
+
+
+
+
+
+
+
+
+
+        -- ESTADOS, segun ello sacamos una cosa u otra por el multiplexor
+        -- 
+        -- 
+        --
+        --
+        
+        
+        if estado = "000" then      -- DISPLAY:  PrOd  <producto> 
+            d1 := "11100110";
+            d2 := "00001010";
+            d3 := "11111100";
+            d4 := "01111010";
+            d5 := prod_letra;
+            d6 := prod_num;
+
+        elsif estado = "001" then   -- DISPLAY:  P 1.0E  F <faltan> 
+            d1 := "11100110";
+            d2 := "01100000";
+            d3 := "11111100";
+            d4 := "10011110";
+            d5 := "10001110";
+            d6 :=  monedas_centenas;       
+            d7 :=  monedas_decenas;
+            d8 := "10011110";  
+
+        elsif estado = "010" then   -- DISPLAY:  EXP _  P r O d
+            d1 := "10011110";
+            d2 := "01101110";
+            d3 := "11100110";
+            d4 := "00000000";
+            d5 := "11100110";
+            d6 := "00001010";
+            d7 := "11111100";
+            d8 := "01111010";
+
+        elsif estado = "011" then   -- DISPLAY:  E r r O r _ P A
+            d1 := "10011110";
+            d2 := "00001010";
+            d3 := "00001010";
+            d4 := "11111100";
+            d5 := "00001010";
+            d6 := "00000000";
+            d7 := "11100110";
+            d8 := "11101110";
+
+        else                        -- DISPLAY:  N O _ H  P r O d
+            d1 := "00101010";
+            d2 := "11111100";
+            d3 := "00000000";
+            d4 := "01101110";
+            d5 := "11100110";
+            d6 := "00001010";
+            d7 := "11111100";
+            d8 := "01111010";
+        end if;
+
+        DISP_DIG1 <= d1;
+        DISP_DIG2 <= d2;
+        DISP_DIG3 <= d3;
+        DISP_DIG4 <= d4;
+        DISP_DIG5 <= d5;
+        DISP_DIG6 <= d6;
+        DISP_DIG7 <= d7;
+        DISP_DIG8 <= d8;
+        
+        
+        end if;
+    end process;
+
+end Behavioral;
+
+
