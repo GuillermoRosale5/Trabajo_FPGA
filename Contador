@@ -8,9 +8,10 @@ entity contador_monedas is
         edge_monedas   : in  std_logic; -- flanco que indica que la moneda se ha metido
         edge_confir    : in  std_logic; -- boton de confirmar el pago cuando se hayan metido todas las monedas
         monedas        : in  std_logic_vector(3 downto 0); -- vector que representa qué moneda se ha metido (10, 20, 50, 1€)
-        estado         : in  std_logic_vector(2 downto 0); -- Entrada de la FSM que indica el estado global
+        estado         : in  unsigned(2 downto 0); -- Entrada de la FSM que indica el estado global
+        Reset_Contador : in std_logic ;
 
-        faltan_monedas : out unsigned(3 downto 0); -- Número de monedas que falta, de cara al DISPLAY para que pueda mostrarlo por pantalla
+        faltan_monedas_contador : out unsigned(3 downto 0); -- Número de monedas que falta, de cara al DISPLAY para que pueda mostrarlo por pantalla
         ok             : out std_logic; -- Señal para la FSM de que el pago se ha podido realizar correctamente
         error          : out std_logic -- Señal para la FSM de que el pago ha sido erroneo, por pasarse o quedarse corto con el importe
     );
@@ -25,11 +26,18 @@ architecture Behavioral of contador_monedas is
 
 begin
 
-    process(clk)
+   CONTADOR: process(clk, Reset_Contador) -- *** CORRECCIÓN 1: Agregar Reset_Contador a la lista de sensibilidad ***
     begin
-        if rising_edge(clk) then
+        
+        -- *** CORRECCIÓN 2: Manejo del Reset Asíncrono con prioridad ***
+        if Reset_Contador = '1' then 
+            faltan_reg <= to_unsigned(10, 4);
+            ok_s    <= '0';
+            error_s <= '0';
+        
+        elsif rising_edge(clk) then
 
-            -- LÓGICA DE REINICIO (Estado 0 = "000")
+            -- LÓGICA DE REINICIO SÍNCRONO (Estado 0 = "000")
             if estado = "000" then
                 faltan_reg <= to_unsigned(10, 4);
                 ok_s    <= '0';
@@ -75,12 +83,21 @@ begin
                             error_s <= '1'; -- mensaje de error que nos llevaria al estado 4 (Error Pago)
                         end if;
                     end if;
-            end if;
-        end if;
+            end if; -- Fin de if estado = "001"
+        end if; -- Fin de if rising_edge(clk)
     end process;
-
-    faltan_monedas <= faltan_reg;
-    ok <= ok_s;                   -- TENER EN CUENTA QUE ESTO SE MANTIENE HASTA QUE VOLVAMOS A ESTADO 0
-    error <= error_s;             -- esto igual (aqui tiene mas sentido)
+    
+    -- *** ELIMINACIÓN DEL PROCESO 'RESEET' CONFLICTIVO ***
+    -- *** CORRECCIÓN 3: Uso de asignaciones concurrentes condicionales (WHEN/ELSE) para manejar el reset en las salidas ***
+    
+    -- La salida se resetea a "0000" si Reset_Contador es '1', si no, toma el valor del registro interno.
+    faltan_monedas_contador <= (others => '0') WHEN Reset_Contador = '1' ELSE faltan_reg;
+    
+    -- La salida 'ok' se resetea a '0' si Reset_Contador es '1', si no, toma el valor de la señal interna ok_s.
+    ok <= '0' WHEN Reset_Contador = '1' ELSE ok_s;
+    
+    -- La salida 'error' se resetea a '0' si Reset_Contador es '1', si no, toma el valor de la señal interna error_s.
+    error <= '0' WHEN Reset_Contador = '1' ELSE error_s;
 
 end Behavioral;
+
