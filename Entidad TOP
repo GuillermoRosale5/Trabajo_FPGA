@@ -2,6 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -42,8 +43,12 @@ architecture Behavioral of TOP is
     signal clk_out : std_logic;
     
     -- SEÑALES DEL FSM
-    signal estado_s       : std_logic_vector(2 downto 0);
+    signal estado_s       : unsigned(2 downto 0);
     
+    --Señal de Prueba
+    SIGNAL BOTONBOTON : std_logic;
+    SIGNAL BOTONAZO_SINCRONO : std_logic;
+
     
     
     -- SEÑALES MULTIPLEXOR     -------------------------------------------
@@ -79,7 +84,10 @@ architecture Behavioral of TOP is
     signal productoOk_s     : std_logic;
     signal errorProducto_s  : std_logic;
     signal producto_id_s    : unsigned(3 downto 0);
-        
+    
+    -- Señales Máquina de estados salida
+    signal reset_general  : std_logic;
+
 
 COMPONENT Prescaler
 port(
@@ -117,6 +125,7 @@ component EDGEDTCTR is
 
             SYNC_IN_MONEDAS        : in STD_LOGIC_VECTOR (NUM_MONEDAS -1 downto 0);
             SYNC_IN_CONFIRMACION   : in STD_LOGIC;
+            RESET_EDGE_DTC         : in STD_LOGIC;
 
             EDGE_MONEDAS_DETECTADO : out STD_LOGIC;
             EDGE_BOTON_PAGO        : out STD_LOGIC;
@@ -131,9 +140,10 @@ component EDGEDTCTR is
             edge_monedas   : in  std_logic;
             edge_confir    : in  std_logic;
             monedas        : in  std_logic_vector(3 downto 0);
-            estado         : in  std_logic_vector(2 downto 0);
+            estado         : in  unsigned(2 downto 0);
+            Reset_Contador : in std_logic ;
 
-            faltan_monedas : out unsigned(3 downto 0);
+            faltan_monedas_contador : out unsigned(3 downto 0);
             ok             : out std_logic;
             error          : out std_logic
         );
@@ -146,9 +156,12 @@ component stock is
         );
         port(
             clk            : in  std_logic;
-            estado         : in  std_logic_vector(2 downto 0);
+            estado         : in  unsigned(2 downto 0);
             productos      : in  std_logic_vector(NUM_PRODUCTOS-1 downto 0);
             error_pago     : in  std_logic;
+            RESET_STOCK    : in  std_logic;
+            Boton_Confirmar : in  std_logic;
+
 
             productoOk     : out std_logic;
             errorProducto  : out std_logic;
@@ -156,6 +169,20 @@ component stock is
         );
     end component;
 
+COMPONENT Maq_Estados is
+    Port(
+            Error_producto      : in std_logic;
+            Error_Pago          : in std_logic;
+            OK_Pago             : in std_logic;
+            OK_Producto         : in std_logic;
+            RESET               : in std_logic;
+            CLK                 : in std_logic;
+            
+            RESET_SALIDA :  out std_logic;
+            ESTADO_SALIDA : out unsigned(2 downto 0)
+
+            );
+END COMPONENT;
 
  component Multiplex is
         generic (
@@ -185,9 +212,9 @@ end component;
         );
         port(
             clk : in  std_logic;
-            estado         : in  std_logic_vector(2 downto 0);
+            estado         : in  unsigned(2 downto 0);
             productos      : in  std_logic_vector(8 downto 0);
-            faltan_monedas : in  unsigned(3 downto 0);
+            faltan_monedas_ctrl_display : in  unsigned(3 downto 0);
 
             DISP_DIG1      : out std_logic_vector(NUM_SEGS-1 downto 0);
             DISP_DIG2      : out std_logic_vector(NUM_SEGS-1 downto 0);
@@ -228,7 +255,21 @@ Inst_Sincronizador : Sincronizador
             S_MONEDAS    => vector_monedas_sinc,
             S_CONFI      => boton_PAGO_sinc
         );
+        
+    Inst_Maq_Estados : Maq_Estados
+    Port Map(
+            Error_producto  => errorProducto_s,
+            Error_Pago      => error_s,
+            OK_Pago         => ok_s,
+            OK_Producto     => productoOk_s,
+            RESET           => rst,
+            CLK             => clk_out,
+            
+            RESET_SALIDA    => reset_general,
+            ESTADO_SALIDA   => estado_s
 
+            );
+            
     -- EDGE DETECTOR
     inst_EDGE_DETECT : EDGEDTCTR
         generic map(
@@ -239,6 +280,7 @@ Inst_Sincronizador : Sincronizador
             CLK                    => clk_out,           
             SYNC_IN_MONEDAS        => vector_monedas_sinc,
             SYNC_IN_CONFIRMACION   => boton_PAGO_sinc,
+            RESET_EDGE_DTC         => reset_general,
 
             EDGE_MONEDAS_DETECTADO => edge_monedas_s,
             EDGE_BOTON_PAGO        => edge_boton_pago_s,
@@ -253,8 +295,9 @@ Inst_Sincronizador : Sincronizador
             edge_confir    => edge_boton_pago_s,
             monedas        => vector_monedas_deter_s,
             estado         => estado_s,
+            Reset_Contador => reset_general,
             
-            faltan_monedas => faltan_monedas_s,
+            faltan_monedas_contador => faltan_monedas_s,
             ok             => ok_s,
             error          => error_s
         );
@@ -269,13 +312,15 @@ Inst_Sincronizador : Sincronizador
             estado         => estado_s,
             productos      => dig_sel_sinc,
             error_pago     => error_s,
+            RESET_STOCK    => reset_general,
+            Boton_Confirmar => edge_boton_pago_s,
+
 
             productoOk     => productoOk_s,
             errorProducto  => errorProducto_s,
             producto_id    => producto_id_s
         );
 
-    
     
     
     Inst_CTR_Display : ctr_display
@@ -286,7 +331,7 @@ Inst_Sincronizador : Sincronizador
             clk            => clk_out,
             estado          => estado_s,
             productos       => dig_sel_sinc,
-            faltan_monedas  => faltan_monedas_s,
+            faltan_monedas_ctrl_display  => faltan_monedas_s,
 
             DISP_DIG1       => DISP_DIG1_s,
             DISP_DIG2       => DISP_DIG2_s,
@@ -320,14 +365,20 @@ Inst_Multi : Multiplex
             digselec_mult => digselec
         );
     
+
+
+
+Err(0) <= '1' when (estado_s /= 0) else '0';
+Err(1)  <=  dig_sel_sinc (0);
+Err(2)  <=  dig_sel_sinc (1);
+Err(3) <= error_s;
+
+Err(4) <= reset_general;
  
-       
-Err <= (others => '1');
+Err(5)<= productoOk_s;
+Err(6)<= errorProducto_s;
+Err(7) <= '1' when (producto_id_s /= 0) else '0';
 
-estado_s <= "000";
-faltan_monedas_s <= (others => '0');
-    
-    
-    
+
+
 end Behavioral;
-
