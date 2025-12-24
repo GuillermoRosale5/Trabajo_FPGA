@@ -1,3 +1,21 @@
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 14.12.2025 20:44:27
+-- Design Name: 
+-- Module Name: Stock - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -10,10 +28,12 @@ entity stock is
     );
     port(
         clk            : in  std_logic;
-        estado         : in  std_logic_vector(2 downto 0);
+        estado         : in  unsigned(2 downto 0);
         productos      : in  std_logic_vector(NUM_PRODUCTOS-1 downto 0);
         error_pago     : in  std_logic;
-
+        RESET_STOCK     : in  std_logic;
+        Boton_Confirmar : in  std_logic;
+        
         productoOk     : out std_logic;
         errorProducto  : out std_logic;
         producto_id    : out unsigned(PROD_BITS-1 downto 0)  --prod. determinista 
@@ -22,8 +42,16 @@ end stock;
 
 architecture Behavioral of stock is
 
+    -- Se necesitan señales de registro intermedias para las salidas de pulso
+    -- (ya que no se pueden asignar directamente a las salidas dentro del proceso y fuera)
+    signal productoOk_reg : std_logic := '0';
+    signal errorProducto_reg : std_logic := '0';
+
     -- memoria de stock (9 productos)
     type stock_array_t is array (0 to NUM_PRODUCTOS-1) of unsigned(3 downto 0);
+    
+    --SUCIOOOOOOOOOOOOOOOOOOOOOOOOOOO
+    constant VECTOR_CERO : std_logic_vector(NUM_PRODUCTOS-1 downto 0) := (others => '0');
 
     signal stock_mem : stock_array_t :=
     (
@@ -38,43 +66,79 @@ architecture Behavioral of stock is
         to_unsigned(9,4)  -- producto 8
     );
 
-    signal producto_sel : unsigned(PROD_BITS-1 downto 0);
-    signal idx     : integer range 0 to NUM_PRODUCTOS-1;  --para encontrar que producto me piden
+    signal producto_sel : unsigned(PROD_BITS-1 downto 0) := (others => '0'); -- Inicialización
+    signal idx     : integer range 0 to NUM_PRODUCTOS-1 := 0;  -- Inicialización
 
 begin
 
-    process(clk)
+    Reset_Cambio_Estado : process(clk,estado)
     begin
-        if rising_edge(clk) then
-
-            -- salidas por defecto (pulsos)
-            productoOk    <= '0';
-            errorProducto <= '0';
-
-            -- solo en estado 0 y sin error de pago
-            if estado = "000" and error_pago = '0' then
-
-                -- decodificación one-hot del producto
-                for i in 0 to NUM_PRODUCTOS-1 loop
-                    if productos(i) = '1' then
-                        producto_sel <= to_unsigned(i, PROD_BITS);
-                        idx <= i;
-                    end if;
-                end loop;
-
-                -- comprobación y actualización de stock
-                if stock_mem(idx) > 0 then
-                    stock_mem(idx) <= stock_mem(idx) - 1;
-                    productoOk <= '1';
-                else
-                    errorProducto <= '1';
+            if rising_edge(clk) then
+                if estado /= "000" then 
+                    productoOk_reg    <= '0';
+                    errorProducto_reg <= '0';
                 end if;
-
             end if;
-        end if;
+    
     end process;
+    
+
+    STOCK :process(clk) -- *** CORRECCIÓN 1: Agregar RESET_STOCK ***
+    begin
+
+     -- *** CORRECCIÓN 2: Manejo del Reset Asíncrono con prioridad ***
+     if rising_edge(clk) then
+
+        if RESET_STOCK = '1' then
+            -- Reinicio de registros y señales de pulso
+            productoOk_reg <= '0';
+            errorProducto_reg <= '0';
+            producto_sel <= (others => '0'); 
+            idx <= 0;
+            -- (stock_mem se mantendrá, ya que la inicialización solo ocurre al inicio de la simulación/compilación)
+        end if;    
+        
+            -- solo en estado 0 y sin error de pago
+        if estado = "000" and error_pago = '0' then
+------------------------------------------------------------------------------------------- Si boton apagado
+                -- decodificación one-hot del producto
+            for i in 0 to NUM_PRODUCTOS-1 loop
+                if productos = VECTOR_CERO then
+                    productoOk_reg <= '0';
+                    
+                elsif productos(i) = '1' then
+                    producto_sel <= to_unsigned(i, PROD_BITS);
+                    idx <= i;
+                end if;
+            end loop;
+                
+                -- comprobación y actualización de stock
+            if stock_mem(idx) > 0 and Boton_Confirmar ='1' then --Implementado el Botón de Confirmar
+                stock_mem(idx) <= stock_mem(idx) - 1;
+                productoOk_reg <= '1'; -- Asignación a la señal de registro
+            elsif stock_mem(idx) <= 0 and Boton_Confirmar ='1' then
+                errorProducto_reg <= '1'; -- Asignación a la señal de registro
+            end if;
+-------------------------------------------------------------------------------------------------
+          
+          
+          
+          
+ ----------------------------------------------------------------------------------------------         
+            end if;
+        end if; -- Fin de rising_edge(clk)
+    end process;
+    
+    -- *** CORRECCIÓN 3: Eliminación del proceso RESEET conflictivo ***
+    -- *** CORRECCIÓN 4: Asignaciones de salida concurrentes con manejo de reset asíncrono ***
 
     -- salida determinista del producto
-    producto_id <= producto_sel;
+    producto_id <= (others => '0') WHEN RESET_STOCK = '1' ELSE producto_sel;
+
+    -- Salidas de pulso
+    productoOk <= '0' WHEN RESET_STOCK = '1' ELSE productoOk_reg;
+    errorProducto <= '0' WHEN RESET_STOCK = '1' ELSE errorProducto_reg;
 
 end Behavioral;
+
+
