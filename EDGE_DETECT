@@ -1,3 +1,23 @@
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 14.12.2025 12:02:41
+-- Design Name: 
+-- Module Name: Edge_Dectector - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -16,6 +36,7 @@ entity EDGEDTCTR is
            -- EMTRADAS DE LOS BOTONES
            SYNC_IN_MONEDAS : in STD_LOGIC_VECTOR (NUM_MONEDAS -1 downto 0);
            SYNC_IN_CONFIRMACION: in STD_LOGIC;
+           RESET_EDGE_DTC : in STD_LOGIC;
            
            -- SALIDAS como FLANCOS DE SUBIDA
            EDGE_MONEDAS_DETECTADO : out STD_LOGIC;
@@ -170,5 +191,7 @@ begin
     Vector_monedas_deter   <= Vect_MONEDAS_DETERMINISTA;
 
 end Behavioral;
+
+   
 
 
