@@ -1,0 +1,169 @@
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 15.12.2025 13:00:51
+-- Design Name: 
+-- Module Name: Maq_Estados - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity Maq_Estados is 
+    Port(
+            Error_producto      : in std_logic;
+            Error_Pago          : in std_logic;
+            OK_Pago             : in std_logic;
+            OK_Producto         : in std_logic;
+            RESET               : in std_logic;
+            CLK                 : in std_logic;
+            
+            RESET_SALIDA :  out std_logic;
+            ESTADO_SALIDA : out unsigned(2 downto 0)
+
+            );
+end Maq_Estados;
+
+architecture Behavioral of Maq_Estados is
+   type ESTADOS is (S0, S1, S2, S3);
+     signal current_state: ESTADOS := S0;
+     signal next_state: ESTADOS;
+     
+     signal tiempo_2s: std_logic;
+     signal tiempo_5s: std_logic;
+     
+     signal contador_2s : integer range 0 to 32000 := 0;
+     signal contador_5s : integer range 0 to 80000 := 0;
+     
+
+
+begin
+state_register: process (RESET, CLK)
+ begin 
+        if RESET = '0' then
+            current_state<=S0;
+         elsif rising_edge(CLK) then
+            current_state<=next_state;
+         end if;
+end process;
+
+Cambio_Estados: process (CLK)
+ begin
+    next_state <= current_state;
+    case current_state is
+        when S0 =>
+            if Error_producto = '1' then
+                next_state <= S3;
+            end if;
+            if OK_Producto = '1' then
+                next_state <= S1;
+            end if;
+                
+        when S1 =>
+            if Error_Pago = '1' then
+                next_state <= S3;
+            end if;
+            if OK_Pago = '1' then
+                next_state <= S2;
+            end if;
+
+        when S2 =>
+            if tiempo_5s = '1' then
+                next_state <= S0;
+            end if;
+
+        when S3 =>
+            if tiempo_2s = '1' then
+                next_state <= S0;
+            end if;
+            
+        when others =>
+            next_state <= S0;
+     end case;
+ end process;
+ 
+ output_decod: process (current_state)
+begin
+    case current_state is
+        when S0 =>
+            ESTADO_SALIDA <= to_unsigned(0, ESTADO_SALIDA'length);
+
+        when S1 =>
+            ESTADO_SALIDA <= to_unsigned(1, ESTADO_SALIDA'length);
+
+        when S2 =>
+            ESTADO_SALIDA <= to_unsigned(2, ESTADO_SALIDA'length);
+
+        when S3 =>
+            ESTADO_SALIDA <= to_unsigned(3, ESTADO_SALIDA'length);
+
+        when others =>
+            ESTADO_SALIDA <= to_unsigned(0, ESTADO_SALIDA'length);
+    end case;
+end process;
+
+
+
+Reset_General: process (CLK, RESET)
+    begin
+    if (RESET = '0')then
+        RESET_SALIDA <= '0';
+        
+    elsif (RESET = '1') then
+        RESET_SALIDA <= '0';
+    end if;
+    
+ end process;
+ 
+ Temporizador_de_2s: process (clk)
+ begin
+    if rising_edge(clk) then
+        if current_state = S3 then
+            if contador_2s < 32000 then
+                contador_2s <= contador_2s + 1;
+                tiempo_2s  <= '0';
+            else
+                tiempo_2s  <= '1';
+            end if;
+         end if;
+    end if;
+ end process;
+ 
+ 
+  Temporizador_de_5s: process (clk)
+ begin
+    if rising_edge(clk) then
+        if current_state = S2 then
+            if contador_5s < 32000 then
+                contador_5s <= contador_5s + 1;
+                tiempo_5s  <= '0';
+            else
+                tiempo_5s  <= '1';
+            end if;
+         end if;
+    end if;
+ end process;
+
+end Behavioral;
