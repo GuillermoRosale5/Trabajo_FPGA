@@ -1,3 +1,11 @@
+--Este componente pretende ser el conector entre la maquina de estados y el multiplexor que es quien realmente manda al HW 
+-- la conf de segmento segun el clk y el tiempo
+-- 
+
+
+-- DEBERIA DE SER SINCRONO?????
+
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -8,9 +16,9 @@ entity ctr_display is
     );
     port(
         clk : in  std_logic;
-        estado          : in  std_logic_vector(2 downto 0);
+        estado          : in  unsigned(2 downto 0);
         productos       : in  std_logic_vector(8 downto 0);
-        faltan_monedas  : in  unsigned(3 downto 0);
+        faltan_monedas_ctrl_display  : in  unsigned(3 downto 0);
 
         -- Digitos que salen directos al multiplexor
         DISP_DIG1       : out std_logic_vector(NUM_SEGS-1 downto 0);
@@ -22,159 +30,193 @@ entity ctr_display is
         DISP_DIG7       : out std_logic_vector(NUM_SEGS-1 downto 0);
         DISP_DIG8       : out std_logic_vector(NUM_SEGS-1 downto 0)
     );
+    
+--   DISPLAY
+--  [Punto,g,f,e,d,c,b,a]   <--Lectura del vector
+--  [8,7,6,5,4,3,2,1]       <-- Lectura de dígitos
+
+--          CONSTANTES LETRAS
+constant Const_Letra_OFF : std_logic_vector(7 downto 0) := "11111111";  -- Apagado
+constant Const_Letra_A   : std_logic_vector(7 downto 0) := "10001000";        -- A
+constant Const_Letra_E   : std_logic_vector(7 downto 0) := "10000110";        -- E
+constant Const_Letra_F   : std_logic_vector(7 downto 0) := "10001110";        -- F
+constant Const_Letra_r   : std_logic_vector(7 downto 0) := "10101111";        -- r (minúscula)
+constant Const_Letra_d   : std_logic_vector(7 downto 0) := "10100001";        -- d (minúscula)
+constant Const_Letra_b   : std_logic_vector(7 downto 0) := "10000011";        -- b (minúscula)
+constant Const_Letra_c   : std_logic_vector(7 downto 0) := "10100111";        -- c (minúscula)
+constant Const_Letra_C_ma: std_logic_vector(7 downto 0) := "11000110";        -- C (mayúscula)
+constant Const_Letra_O_ma: std_logic_vector(7 downto 0) := "11000000";        -- O (mayúscula)
+constant Const_Letra_o   : std_logic_vector(7 downto 0) := "10100011";        -- o (minúscula)
+constant Const_Letra_P   : std_logic_vector(7 downto 0) := "10001100";        -- P
+constant Const_Letra_X   : std_logic_vector(7 downto 0) := "10110110";        -- X (aproximación)
+constant Const_Letra_Euro: std_logic_vector(7 downto 0) := "10000111";        -- € (euro, aproximación estándar)
+constant Const_BarraBaja : std_logic_vector(7 downto 0) := "10000000";        -- 0
+-- NÚMEROS
+constant Const_Num_0     : std_logic_vector(7 downto 0) := "11000000";        -- 0
+constant Const_Num_0_punto:std_logic_vector(7 downto 0) := "01000000";        -- 0.
+constant Const_Num_1     : std_logic_vector(7 downto 0) := "11111001";        -- 1
+constant Const_Num_1_punto:std_logic_vector(7 downto 0) := "11111001";        -- 1.
+constant Const_Num_2     : std_logic_vector(7 downto 0) := "10100100";        -- 2
+constant Const_Num_3     : std_logic_vector(7 downto 0) := "10110000";        -- 3
+constant Const_Num_4     : std_logic_vector(7 downto 0) := "10011001";        -- 4
+constant Const_Num_5     : std_logic_vector(7 downto 0) := "10010010";        -- 5
+constant Const_Num_6     : std_logic_vector(7 downto 0) := "10000010";        -- 6
+constant Const_Num_7     : std_logic_vector(7 downto 0) := "11111000";        -- 7
+constant Const_Num_8     : std_logic_vector(7 downto 0) := "10000000";        -- 8
+constant Const_Num_9     : std_logic_vector(7 downto 0) := "10010000";        -- 9
+
+
+    
+    
 end ctr_display;
 
 architecture Behavioral of ctr_display is
 begin
-
+------------------------------------------------------------------------------------------------- QUE SE INICIALICEN A 0 SOLO AL PRINCIPIO
     process(clk)
         variable d1, d2, d3, d4, d5, d6, d7, d8 : std_logic_vector(NUM_SEGS-1 downto 0);
         variable prod_letra : std_logic_vector(NUM_SEGS-1 downto 0);
         variable prod_num   : std_logic_vector(NUM_SEGS-1 downto 0);
         variable monedas_centenas : std_logic_vector(NUM_SEGS-1 downto 0);
         variable monedas_decenas  : std_logic_vector(NUM_SEGS-1 downto 0);
-        
-    begin
-        if rising_edge(clk) then
-        d1 := (others => '0');
-        d2 := (others => '0');
-        d3 := (others => '0');
-        d4 := (others => '0');
-        d5 := (others => '0');
-        d6 := (others => '0');
-        d7 := (others => '0');
-        d8 := (others => '0');
-
-        prod_letra := (others => '0');
-        prod_num   := (others => '0');
-      
-        monedas_centenas := (others => '0');
-        monedas_decenas := (others => '0');
-        
-        
-
+--------------------------------------------------------------------------------------------------------------
 
         -- Según producto descodificamos:
         --     A   B   C
         --    000 000 000
         --    012 012 012
-        
-        
-        if productos = "000000001" then                             
-            prod_letra := "11101110"; prod_num := "11111100";         -- A0
+    begin    
+    if rising_edge(clk) then   
+         if productos = "000000001" then                             
+            prod_letra := Const_Letra_A;   -- A
+            prod_num   := Const_Num_0;     -- 0
         elsif productos = "000000010" then
-            prod_letra := "11101110"; prod_num := "01100000";         -- A1
+            prod_letra := Const_Letra_A;   -- A
+            prod_num   := Const_Num_1;     -- 1
         elsif productos = "000000100" then
-            prod_letra := "11101110"; prod_num := "11011010";         -- A2
+            prod_letra := Const_Letra_A;   -- A
+            prod_num   := Const_Num_2;     -- 2  
         elsif productos = "000001000" then
-            prod_letra := "00111110"; prod_num := "11111100";         -- B0
+            prod_letra := Const_Letra_b;   -- b
+            prod_num   := Const_Num_0;     -- 0
         elsif productos = "000010000" then
-            prod_letra := "00111110"; prod_num := "01100000";         -- B1
+            prod_letra := Const_Letra_b;   -- b
+            prod_num   := Const_Num_1;     -- 1
         elsif productos = "000100000" then
-            prod_letra := "00111110"; prod_num := "11011010";         -- B2
+            prod_letra := Const_Letra_b;   -- b
+            prod_num   := Const_Num_2;     -- 2
         elsif productos = "001000000" then
-            prod_letra := "00011010"; prod_num := "11111100";         -- C0
+            prod_letra := Const_Letra_C_ma; -- C
+            prod_num   := Const_Num_0;      -- 0
         elsif productos = "010000000" then
-            prod_letra := "00011010"; prod_num := "01100000";         -- C1
+            prod_letra := Const_Letra_C_ma; -- C
+            prod_num   := Const_Num_1;      -- 1
         elsif productos = "100000000" then
-            prod_letra := "00011010"; prod_num := "11011010";         -- C2
+            prod_letra := Const_Letra_C_ma; -- C
+            prod_num   := Const_Num_2;      -- 2
         else
-            prod_letra := "00000000"; prod_num := "00000000";         -- 00
+            prod_letra := Const_Letra_OFF;
+            prod_num   := Const_Letra_OFF;
         end if;
-        
-        -- MONEDAS, en un vector de 2 bits, para poner euros y se cuenta en número de monedas de 10 cents: 
-        --                                                                                                      1.0 -> 10 monedas
-        --                                                                                                      0.1 -> 1 moneda
-        case faltan_monedas is
-            when "0000" =>
-                monedas_centenas := "11111101"; monedas_decenas := "11111100"; -- 0.0
-            when "0001" =>
-                monedas_centenas := "11111101"; monedas_decenas := "01100000"; -- 0.1
-            when "0010" =>
-                monedas_centenas := "11111101"; monedas_decenas := "11011010"; -- 0.2
-            when "0011" =>
-                monedas_centenas := "11111101"; monedas_decenas := "11110010"; -- 0.3
-            when "0100" =>
-                monedas_centenas := "11111101"; monedas_decenas := "01100110"; -- 0.4
-            when "0101" =>
-                monedas_centenas := "11111101"; monedas_decenas := "10110110"; -- 0.5
-            when "0110" =>
-                monedas_centenas := "11111101"; monedas_decenas := "10111110"; -- 0.6
-            when "0111" =>
-                monedas_centenas := "11111101"; monedas_decenas := "11100000"; -- 0.7
-            when "1000" =>
-                monedas_centenas := "11111101"; monedas_decenas := "11111110"; -- 0.8
-            when "1001" =>
-                monedas_centenas := "11111101"; monedas_decenas := "11110110"; -- 0.9
-            when "1010" =>
-                monedas_centenas := "01100001"; monedas_decenas := "11111100"; -- 1.0
-            when others =>
-                monedas_centenas := "11111111"; monedas_decenas := "11111110"; -- ERROR
-        end case;
 
+-- MONEDAS, en un vector de 2 bits, para poner euros y se cuenta en número de monedas de 10 cents:       
+        case faltan_monedas_ctrl_display is
 
+    when to_unsigned(0,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0. 
+        monedas_decenas  := Const_Num_0;        -- 0   -> 0.0
+    when to_unsigned(1,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_1;        -- 1   -> 0.1
+    when to_unsigned(2,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_2;        -- 2   -> 0.2
+    when to_unsigned(3,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_3;        -- 3   -> 0.3
+    when to_unsigned(4,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_4;        -- 4   -> 0.4
+    when to_unsigned(5,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_5;        -- 5   -> 0.5
+    when to_unsigned(6,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_6;        -- 6   -> 0.6
+    when to_unsigned(7,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_7;        -- 7   -> 0.7
+    when to_unsigned(8,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_8;        -- 8   -> 0.8
+    when to_unsigned(9,4) =>
+        monedas_centenas := Const_Num_0_punto;  -- 0.
+        monedas_decenas  := Const_Num_9;        -- 9   -> 0.9
+    when to_unsigned(10,4) =>
+        monedas_centenas := Const_Num_1;        -- 1
+        monedas_decenas  := Const_Num_0;        -- 0   -> 1.0
+    when others =>
+        monedas_centenas := (others => '1');   -- apagado / error
+        monedas_decenas  := (others => '1');
+end case;
 
-
-
-
-
-
-
-
-        -- ESTADOS, segun ello sacamos una cosa u otra por el multiplexor
-        -- 
-        -- 
-        --
-        --
-        
-        
+        -- ESTADOS, segun ello sacamos una cosa u otra por el multiplexor       
         if estado = "000" then      -- DISPLAY:  PrOd  <producto> 
-            d1 := "11100110";
-            d2 := "00001010";
-            d3 := "11111100";
-            d4 := "01111010";
-            d5 := prod_letra;
-            d6 := prod_num;
+            
+            --[Punto,g,f,e,d,c,b,a]<--Lectura del vector
+            --[8,7,6,5,4,3,2,1] <--- Lectura de dígitos
+            d8 := Const_Letra_P; --P
+            d7 := Const_Letra_r; --r
+            d6 := Const_Letra_o; --O
+            d5 := Const_Letra_D; --d
+            d4 := Const_Letra_OFF; --apagado
+            d3 := Const_Letra_OFF; --apagado          
+            d2 := prod_letra;
+            d1 := prod_num;         
+            
+        elsif estado = "001" then   -- DISPLAY:  P1.0E  F <faltan>
 
-        elsif estado = "001" then   -- DISPLAY:  P 1.0E  F <faltan> 
-            d1 := "11100110";
-            d2 := "01100000";
-            d3 := "11111100";
-            d4 := "10011110";
-            d5 := "10001110";
-            d6 :=  monedas_centenas;       
-            d7 :=  monedas_decenas;
-            d8 := "10011110";  
+            d8 := Const_Letra_P;
+            d7 := Const_Num_1;
+            d6 := Const_Num_0;        -- el punto lo gestiona el multiplexor si procede
+            d5 := Const_Letra_E;
+            d4 := Const_Letra_OFF;
+            d3 := Const_Letra_F;
+            d2 := monedas_centenas;  -- o decenas/unidades según tu diseño 
+            d1 := monedas_decenas;
 
         elsif estado = "010" then   -- DISPLAY:  EXP _  P r O d
-            d1 := "10011110";
-            d2 := "01101110";
-            d3 := "11100110";
-            d4 := "00000000";
-            d5 := "11100110";
-            d6 := "00001010";
-            d7 := "11111100";
-            d8 := "01111010";
+        
+            d8 := Const_Letra_E;        -- E
+            d7 := Const_Letra_X;        -- X
+            d6 := Const_Letra_P;        -- P
+            d5 := Const_BarraBaja;      -- _
+            d4 := Const_Letra_P;        -- P
+            d3 := Const_Letra_r;        -- r
+            d2 := Const_Letra_O_ma;     -- O
+            d1 := Const_Letra_d;        -- d
 
         elsif estado = "011" then   -- DISPLAY:  E r r O r _ P A
-            d1 := "10011110";
-            d2 := "00001010";
-            d3 := "00001010";
-            d4 := "11111100";
-            d5 := "00001010";
-            d6 := "00000000";
-            d7 := "11100110";
-            d8 := "11101110";
 
-        else                        -- DISPLAY:  N O _ H  P r O d
-            d1 := "00101010";
-            d2 := "11111100";
-            d3 := "00000000";
-            d4 := "01101110";
-            d5 := "11100110";
-            d6 := "00001010";
-            d7 := "11111100";
-            d8 := "01111010";
+            d8 := Const_Letra_E;        -- E
+            d7 := Const_Letra_r;        -- r
+            d6 := Const_Letra_r;        -- r
+            d5 := Const_Letra_O_ma;     -- O
+            d4 := Const_Letra_r;        -- r
+            d3 := Const_BarraBaja;      -- _
+            d2 := Const_Letra_P;        -- P
+            d1 := Const_Letra_A;        -- A
+
+
+        else                        -- DISPLAY:  N O _ H  P r O d           <<<<<<<<NO SE CUMPLE ESTO
+            d1 := Const_Letra_OFF;
+            d2 := Const_Letra_OFF;
+            d3 := Const_Letra_OFF;
+            d4 := Const_Letra_OFF;
+            d5 := Const_Letra_OFF;
+            d6 := Const_Letra_OFF;
+            d7 := Const_Letra_OFF;
+            d8 := Const_Letra_OFF;
         end if;
 
         DISP_DIG1 <= d1;
@@ -185,12 +227,12 @@ begin
         DISP_DIG6 <= d6;
         DISP_DIG7 <= d7;
         DISP_DIG8 <= d8;
-        
-        
+
         end if;
     end process;
 
 end Behavioral;
+
 
 
 
