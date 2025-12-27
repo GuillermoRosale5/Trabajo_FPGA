@@ -26,6 +26,22 @@ architecture Behavioral of contador_monedas is
 
 begin
 
+Reset_Cambio_Estado : process(clk,estado)
+    begin
+            if rising_edge(clk) then
+                if estado /= "000" then 
+                       faltan_reg   <= to_unsigned(0, 4);
+                       resta        <= to_unsigned(0, 4);
+                       ok_s         <= '0';
+                       error_s      <= '0';
+                end if;
+            end if;
+    
+    end process;
+
+
+
+
    CONTADOR: process(clk, Reset_Contador) -- *** CORRECCIÓN 1: Agregar Reset_Contador a la lista de sensibilidad ***
     begin
         
@@ -100,4 +116,5 @@ begin
     error <= '0' WHEN Reset_Contador = '1' ELSE error_s;
 
 end Behavioral;
+
 
