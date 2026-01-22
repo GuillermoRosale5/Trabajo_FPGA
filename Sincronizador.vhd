@@ -1,3 +1,4 @@
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -10,11 +11,11 @@ entity SINCRONIZADOR is
     
     port(
         CLK: in std_logic;
-        -- ENTRADAS ASINCRONAS DE LOS BOTONES Y SWITCHES
+
         AS_PRODUCTOS: in std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
         AS_MONEDAS: in std_logic_vector (NUM_MONEDAS - 1 downto 0); 
         AS_CONFI : in std_logic;
-        -- SALIDAS SINCRONAS DE LOS BOTONES Y SWITCHES       
+    
         S_PRODUCTOS: out std_logic_vector (NUM_PRODUCTOS - 1 downto 0);
         S_MONEDAS: out std_logic_vector (NUM_MONEDAS - 1 downto 0);
         S_CONFI : out std_logic
