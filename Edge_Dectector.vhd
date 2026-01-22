@@ -1,3 +1,4 @@
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -171,6 +172,7 @@ begin
     Vector_monedas_deter   <= Vect_MONEDAS_DETERMINISTA;
 
 end Behavioral;
+
 
 
    
