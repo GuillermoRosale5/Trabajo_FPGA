@@ -1,5 +1,7 @@
-library ieee;
-use ieee.std_logic_1164.all;
+
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
 entity Prescaler is
@@ -21,7 +23,7 @@ begin
     process(clk_in)
     begin
         if rising_edge(clk_in) then
-            if rst = '1' then
+            if rst = '0' then
                 counter <= 0;
                 clk_reg <= '0';
             else
@@ -38,3 +40,4 @@ begin
     clk_out <= clk_reg;
 
 end Behavioral;
+
