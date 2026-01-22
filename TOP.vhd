@@ -33,6 +33,10 @@ Port (
            digselec      : out std_logic_vector(NUM_DIGITS-1 downto 0);
            segment       : out STD_LOGIC_VECTOR(NUM_SEGS-1 downto 0);
            
+           ESTADO_OFF_button    : in STD_LOGIC;
+           control_LEDS_1       : in STD_LOGIC;
+           control_LEDS_2       : in STD_LOGIC;
+           
            
            Err : out STD_LOGIC_VECTOR (15 downto 0)
            );
@@ -44,12 +48,7 @@ architecture Behavioral of TOP is
     
     -- SEÑALES DEL FSM
     signal estado_s       : unsigned(2 downto 0);
-    
-    --Señal de Prueba
-    SIGNAL BOTONBOTON : std_logic;
-    SIGNAL BOTONAZO_SINCRONO : std_logic;
-
-    
+   
     
     -- SEÑALES MULTIPLEXOR     -------------------------------------------
     -- SEÑALES PARA LOS DIGITOS DEL DISPLAY, de tamaño 8 bits porque el último es el punto del dígito.
@@ -85,6 +84,9 @@ architecture Behavioral of TOP is
     signal errorProducto_s  : std_logic;
     signal producto_id_s    : unsigned(3 downto 0);
     
+    signal STOCK_producto_i_s :  std_logic_vector(NUM_PRODUCTOS-1 downto 0);
+  
+    signal en_leds : std_logic; ------------    ---------------------------------------------------------------------------------- OJO
     -- Señales Máquina de estados salida
     signal reset_general  : std_logic;
 
@@ -165,7 +167,9 @@ component stock is
 
             productoOk     : out std_logic;
             errorProducto  : out std_logic;
-            producto_id    : out unsigned(PROD_BITS-1 downto 0)
+            producto_id    : out unsigned(PROD_BITS-1 downto 0);
+            STOCK_producto_i   : out std_logic_vector(NUM_PRODUCTOS-1 downto 0)
+  
         );
     end component;
 
@@ -177,9 +181,11 @@ COMPONENT Maq_Estados is
             OK_Producto         : in std_logic;
             RESET               : in std_logic;
             CLK                 : in std_logic;
+            ESTADO_OFF          : in std_logic;
             
             RESET_SALIDA :  out std_logic;
-            ESTADO_SALIDA : out unsigned(2 downto 0)
+            ESTADO_SALIDA : out unsigned(2 downto 0);
+            LEDS : out STD_LOGIC_VECTOR (6 downto 0)
 
             );
 END COMPONENT;
@@ -264,10 +270,17 @@ Inst_Sincronizador : Sincronizador
             OK_Producto     => productoOk_s,
             RESET           => rst,
             CLK             => clk_out,
+            ESTADO_OFF      => ESTADO_OFF_button,
             
             RESET_SALIDA    => reset_general,
-            ESTADO_SALIDA   => estado_s
-
+            ESTADO_SALIDA   => estado_s,
+            LEDS(0)         => Err(9),
+            LEDS(1)         => Err(10),
+            LEDS(2)         => Err(11),
+            LEDS(3)         => Err(12),
+            LEDS(4)         => Err(13),
+            LEDS(5)         => Err(14),
+            LEDS(6)         => Err(15)
             );
             
     -- EDGE DETECTOR
@@ -318,7 +331,8 @@ Inst_Sincronizador : Sincronizador
 
             productoOk     => productoOk_s,
             errorProducto  => errorProducto_s,
-            producto_id    => producto_id_s
+            producto_id    => producto_id_s,
+            STOCK_producto_i => STOCK_producto_i_s
         );
 
     
@@ -368,18 +382,67 @@ Inst_Multi : Multiplex
 
 
 
-Err(0) <= '1' when (estado_s /= 0) else '0';
-Err(1)  <=  dig_sel_sinc (0);
-Err(2)  <=  dig_sel_sinc (1);
-Err(3) <= error_s;
+---Err(0) <= '1' when (estado_s /= 0) else '0';
+--Err(1)  <=  dig_sel_sinc (0);
+--Err(2)  <=  dig_sel_sinc (1);
+--Err(3) <= error_s;
 
-Err(4) <= reset_general;
+--Err(4) <= reset_general;
  
-Err(5)<= productoOk_s;
-Err(6)<= errorProducto_s;
-Err(7) <= '1' when (producto_id_s /= 0) else '0';
+--Err(5)<= productoOk_s;
+--Err(6)<= errorProducto_s;
+--Err(7) <= '1' when (producto_id_s /= 0) else '0';
+
+--PRUEBAS GUILLE
+
+---- IF CONTROL DE LOS LEDS 1
+--Err(0) <= STOCK_producto_i_s(0) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(1) <= STOCK_producto_i_s(1) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(2) <= STOCK_producto_i_s(2) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(3) <= STOCK_producto_i_s(3) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(4) <= STOCK_producto_i_s(4) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(5) <= STOCK_producto_i_s(5) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(6) <= STOCK_producto_i_s(6) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(7) <= STOCK_producto_i_s(7) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
+--Err(8) <= STOCK_producto_i_s(8) when (control_LEDS_1 = '1' and control_LEDS_2 = '0' ) else '0';
 
 
+---- if  CONTROL DE LOS LEDS 2
+--Err(0) <= STOCK_producto_i_s(0) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(1) <= STOCK_producto_i_s(1) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(2) <= STOCK_producto_i_s(2) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(3) <= STOCK_producto_i_s(3) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(4) <= STOCK_producto_i_s(4) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(5) <= STOCK_producto_i_s(5) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(6) <= STOCK_producto_i_s(6) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(7) <= STOCK_producto_i_s(7) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+--Err(8) <= STOCK_producto_i_s(8) when (control_LEDS_2 = '1' and control_LEDS_1 = '0' ) else '0';
+
+
+en_leds <= control_LEDS_1 xor control_LEDS_2;
+
+Err(0) <= STOCK_producto_i_s(0) when en_leds = '1' else '0';
+Err(1) <= STOCK_producto_i_s(1) when en_leds = '1' else '0';
+Err(2) <= STOCK_producto_i_s(2) when en_leds = '1' else '0';
+Err(3) <= STOCK_producto_i_s(3) when en_leds = '1' else '0';
+Err(4) <= STOCK_producto_i_s(4) when en_leds = '1' else '0';
+Err(5) <= STOCK_producto_i_s(5) when en_leds = '1' else '0';
+Err(6) <= STOCK_producto_i_s(6) when en_leds = '1' else '0';
+Err(7) <= STOCK_producto_i_s(7) when en_leds = '1' else '0';
+Err(8) <= STOCK_producto_i_s(8) when en_leds = '1' else '0';
+
+--Usaremos del Led 9 al 15 para mostrar que se está expendiendo 
+
+-- MAS PRUEBAS
+--Err(10) <= '1' when (errorProducto_s/= '0') else '0';  -- std_logig BIT
+
+
+--Err(15) <= '1' when (estado_s = to_unsigned(0, estado_s'length)) else '0';
+--Err(14) <= '1' when (estado_s = to_unsigned(1, estado_s'length)) else '0';
+--Err(13) <= '1' when (estado_s = to_unsigned(2, estado_s'length)) else '0';
+--Err(12) <= '1' when (estado_s = to_unsigned(3, estado_s'length)) else '0';
+--Err(11) <= '1' when (estado_s = to_unsigned(4, estado_s'length)) else '0';
 
 end Behavioral;
+
 
