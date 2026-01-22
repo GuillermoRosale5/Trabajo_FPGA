@@ -1,3 +1,4 @@
+
 --Este componente pretende ser el conector entre la maquina de estados y el multiplexor que es quien realmente manda al HW 
 -- la conf de segmento segun el clk y el tiempo
 -- 
@@ -187,13 +188,13 @@ end case;
 
         elsif estado = "010" then   -- DISPLAY:  EXP _  P r O d
         
-            d8 := Const_Letra_E;        -- E
-            d7 := Const_Letra_X;        -- X
-            d6 := Const_Letra_P;        -- P
-            d5 := Const_BarraBaja;      -- _
+            d8 := Const_Letra_P;        -- P
+            d7 := Const_Letra_r;        -- R
+            d6 := Const_Letra_O;        -- O
+            d5 := Const_Letra_d;        -- d
             d4 := Const_Letra_P;        -- P
             d3 := Const_Letra_r;        -- r
-            d2 := Const_Letra_O_ma;     -- O
+            d2 := Const_Letra_O;        -- O
             d1 := Const_Letra_d;        -- d
 
         elsif estado = "011" then   -- DISPLAY:  E r r O r _ P A
@@ -232,7 +233,3 @@ end case;
     end process;
 
 end Behavioral;
-
-
-
-
