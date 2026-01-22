@@ -1,3 +1,4 @@
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -8,16 +9,17 @@ entity stock is
         PROD_BITS     : positive := 4   -- permite codificar hasta 9 productos
     );
     port(
-        clk            : in  std_logic;
-        estado         : in  unsigned(2 downto 0);
-        productos      : in  std_logic_vector(NUM_PRODUCTOS-1 downto 0);
-        error_pago     : in  std_logic;
+        clk             : in  std_logic;
+        estado          : in  unsigned(2 downto 0);
+        productos       : in  std_logic_vector(NUM_PRODUCTOS-1 downto 0);
+        error_pago      : in  std_logic;
         RESET_STOCK     : in  std_logic;
         Boton_Confirmar : in  std_logic;
         
         productoOk     : out std_logic;
         errorProducto  : out std_logic;
-        producto_id    : out unsigned(PROD_BITS-1 downto 0)  --prod. determinista 
+        producto_id    : out unsigned(PROD_BITS-1 downto 0);  --prod. determinista 
+        STOCK_producto_i   : out std_logic_vector(NUM_PRODUCTOS-1 downto 0)
     );
 end stock;
 
@@ -31,10 +33,10 @@ architecture Behavioral of stock is
         to_unsigned(5,4),  -- producto 0
         to_unsigned(3,4),  -- producto 1
         to_unsigned(7,4),  -- producto 2
-        to_unsigned(2,4),  -- producto 3
+        to_unsigned(3,4),  -- producto 3
         to_unsigned(4,4),  -- producto 4
         to_unsigned(6,4),  -- producto 5
-        to_unsigned(1,4),  -- producto 6
+        to_unsigned(3,4),  -- producto 6
         to_unsigned(8,4),  -- producto 7
         to_unsigned(9,4)   -- producto 8
     );
@@ -57,6 +59,8 @@ architecture Behavioral of stock is
     signal producto_id_reg   : unsigned(PROD_BITS-1 downto 0);  --prod. determinista 
     signal estado_prev       : unsigned(2 downto 0) := (others => '0');
 
+    signal stock_bar_reg : std_logic_vector(NUM_PRODUCTOS-1 downto 0) := (others => '0');
+
 begin
 
     prod_u <= unsigned(productos);
@@ -76,7 +80,39 @@ begin
         end loop;
         sel_idx <= tmp;
     end process;
+----------------------------------------------------------
 
+-- Ejemplos (NUM_PRODUCTOS=9): 0->000000000, 1->100000000, 2->110000000, 3->111000000, 7->111111100
+process(onehot_valid, sel_idx)
+    variable nn : integer;
+begin
+    stock_bar_reg <= (others => '0');
+    nn := 0;
+
+    if onehot_valid = '1' then
+        nn := to_integer(stock_mem(to_integer(sel_idx)));
+
+        -- Saturar por si el stock fuese mayor que NUM_PRODUCTOS
+        if nn > NUM_PRODUCTOS then
+            nn := NUM_PRODUCTOS;
+        elsif nn < 0 then
+            nn := 0;
+        end if;
+
+        -- Bucle de rango CONSTANTE (sintetizable)
+        for k in 0 to NUM_PRODUCTOS-1 loop
+            if k < nn then
+                stock_bar_reg(NUM_PRODUCTOS-1-k) <= '1';  -- barra desde MSB
+            end if;
+        end loop;
+    end if;
+end process;
+
+
+
+
+
+-------------------------------------------------------
     -- Secuencial
     process(clk)
     begin
@@ -93,8 +129,8 @@ begin
         end if;
         estado_prev <= estado;
     
-        -- Reset del stock a valores de fabrica
-        if RESET_STOCK = '1' then
+        -- Reset del stock a valores de fabrica                         -- HE CAMBIADO EL RESET A 0
+        if RESET_STOCK = '0' then
           stock_mem       <= STOCK_INIT;
           producto_id_reg <= to_unsigned(0, PROD_BITS);
     
@@ -114,7 +150,6 @@ begin
                 -- Seleccion invalida (ninguno o varios) => errorProducto
                 if onehot_valid = '0' then
                   errorProducto_reg <= '1';
-    
                 else
                   -- Seleccion valida: mirar stock
                   if stock_mem(to_integer(sel_idx)) > 0 then
@@ -124,7 +159,6 @@ begin
                   else
                     errorProducto_reg <= '1';
                   end if;
-    
                 end if;
               end if;
             end if;
@@ -137,6 +171,10 @@ end process;
     productoOk    <= productoOk_reg;
     errorProducto <= errorProducto_reg;
     producto_id   <= producto_id_reg;
+    
+    
+    -- Barra de bits de stock por producto seleccionado
+    STOCK_producto_i <= stock_bar_reg;
 
 end Behavioral;
 
