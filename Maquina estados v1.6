@@ -2,15 +2,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity Maq_Estados is 
     Port(
             Error_producto      : in std_logic;
@@ -19,72 +10,91 @@ entity Maq_Estados is
             OK_Producto         : in std_logic;
             RESET               : in std_logic;
             CLK                 : in std_logic;
+            ESTADO_OFF          : in std_logic;
             
             RESET_SALIDA :  out std_logic;
-            ESTADO_SALIDA : out unsigned(2 downto 0)
+            ESTADO_SALIDA : out unsigned(2 downto 0);
+            
+            LEDS : out STD_LOGIC_VECTOR (6 downto 0)
 
             );
 end Maq_Estados;
 
 architecture Behavioral of Maq_Estados is
-   type ESTADOS is (S0, S1, S2, S3);
-     signal current_state: ESTADOS := S0;
-     signal next_state: ESTADOS;
+   type ESTADOS is (S0, S1, S2, S3, SOFF);
+   signal current_state: ESTADOS := SOFF;
+   signal next_state: ESTADOS;
      
-     signal tiempo_2s: std_logic;
-     signal tiempo_5s: std_logic;
+   signal tiempo_2s: std_logic := '0';
+   signal tiempo_5s: std_logic := '0';
      
-     signal contador_2s : integer range 0 to 32000 := 0;
-     signal contador_5s : integer range 0 to 80000 := 0;
-     
-
+   signal contador_2s : integer range 0 to 32000 := 0;
+   signal contador_5s : integer range 0 to 80000 := 0;
+   
+   signal counter : integer := 0;
 
 begin
+
+-- Registro de estado: RESET siempre a S0 (como antes)
 state_register: process (RESET, CLK)
- begin 
-        if RESET = '0' then
-            current_state<=S0;
-         elsif rising_edge(CLK) then
-            current_state<=next_state;
-         end if;
+begin 
+    if RESET = '0' then
+        current_state <= S0;
+    elsif rising_edge(CLK) then
+        current_state <= next_state;
+    end if;
 end process;
 
-Cambio_Estados: process (CLK)
- begin
+-- Lógica de transición (combinacional) SIN process(all)
+Cambio_Estados: process (clk)
+begin
     next_state <= current_state;
-    case current_state is
-        when S0 =>
-            if Error_producto = '1' then
-                next_state <= S3;
-            end if;
-            if OK_Producto = '1' then
-                next_state <= S1;
-            end if;
-                
-        when S1 =>
-            if Error_Pago = '1' then
-                next_state <= S3;
-            end if;
-            if OK_Pago = '1' then
-                next_state <= S2;
-            end if;
 
-        when S2 =>
-            if tiempo_5s = '1' then
-                next_state <= S0;
-            end if;
+    if ESTADO_OFF = '0' then
+        next_state <= SOFF;
+    else
+        case current_state is
+            when SOFF => next_state <= S0;
 
-        when S3 =>
-            if tiempo_2s = '1' then
+            when S0 =>
+                if Error_producto = '1' then
+                    next_state <= S3;
+                elsif OK_Producto = '1' then
+                    next_state <= S1;
+                end if;
+
+            when S1 =>
+                if Error_Pago = '1' then
+                    next_state <= S3;
+                elsif OK_Pago = '1' then
+                    next_state <= S2;
+                end if;
+
+            when S2 =>
+                if tiempo_5s = '1' then
+                    next_state <= S0;
+                end if;
+
+            when S3 =>
+                if tiempo_2s = '1' then
+                    next_state <= S0;
+                end if;
+
+            when others =>
                 next_state <= S0;
-            end if;
-            
-        when others =>
-            next_state <= S0;
-     end case;
- end process;
- 
- output_decod: process (current_state)
+        end case;
+    end if;
+end process;
+
+
+
+
+
+
+
+
+-- Decodificación de salida (combinacional)
+output_decod: process (current_state)
 begin
     case current_state is
         when S0 =>
@@ -99,52 +109,123 @@ begin
         when S3 =>
             ESTADO_SALIDA <= to_unsigned(3, ESTADO_SALIDA'length);
 
+        when SOFF =>
+            ESTADO_SALIDA <= "111";
+
         when others =>
             ESTADO_SALIDA <= to_unsigned(0, ESTADO_SALIDA'length);
     end case;
 end process;
 
-
-
-Reset_General: process (CLK, RESET)
-    begin
-    if (RESET = '0')then
-        RESET_SALIDA <= '0';                                                    -- DESACTIVADO
-        
-    elsif (RESET = '1') then
+-- Reset general hacia el resto del sistema (activo a '0')
+-- Si RESET='0' -> reseteas todo
+-- Si ESTADO_OFF='0' -> también reseteas todo (apagado)
+Reset_General: process (RESET, CLK)
+begin
+    if RESET = '0' then
         RESET_SALIDA <= '0';
+    elsif rising_edge(CLK) then
+        if ESTADO_OFF = '0' then
+            RESET_SALIDA <= '0';
+        else
+            RESET_SALIDA <= '1';
+        end if;
     end if;
-    
- end process;
- 
- Temporizador_de_2s: process (clk)
- begin
-    if rising_edge(clk) then
-        if current_state = S3 then
+end process;
+
+-- Temporizador 2s (secuencial, solo clk; y rearmado por RESET/ESTADO_OFF/SOFF dentro)
+Temporizador_de_2s: process (CLK)
+begin
+    if rising_edge(CLK) then
+        if (RESET = '0') or (ESTADO_OFF = '0') or (current_state = SOFF) then
+            contador_2s <= 0;
+            tiempo_2s   <= '0';
+
+        elsif current_state = S3 then
             if contador_2s < 32000 then
                 contador_2s <= contador_2s + 1;
-                tiempo_2s  <= '0';
+                tiempo_2s   <= '0';
             else
-                tiempo_2s  <= '1';
+                contador_2s <= 32000;
+                tiempo_2s   <= '1';
             end if;
-         end if;
+
+        else
+            contador_2s <= 0;
+            tiempo_2s   <= '0';
+        end if;
     end if;
- end process;
- 
- 
-  Temporizador_de_5s: process (clk)
- begin
-    if rising_edge(clk) then
-        if current_state = S2 then
-            if contador_5s < 32000 then
+end process;
+
+-- Temporizador 5s (secuencial, solo clk; y rearmado por RESET/ESTADO_OFF/SOFF dentro)
+Temporizador_de_5s: process (CLK)
+begin
+    if rising_edge(CLK) then
+        if (RESET = '0') or (ESTADO_OFF = '0') or (current_state = SOFF) then
+            contador_5s <= 0;
+            tiempo_5s   <= '0';
+
+        elsif current_state = S2 then
+            if contador_5s < 80000 then
                 contador_5s <= contador_5s + 1;
-                tiempo_5s  <= '0';
+                tiempo_5s   <= '0';
             else
-                tiempo_5s  <= '1';
+                contador_5s <= 80000;
+                tiempo_5s   <= '1';
             end if;
-         end if;
+
+        else
+            contador_5s <= 0;
+            tiempo_5s   <= '0';
+        end if;
     end if;
- end process;
+end process;
+
+
+Control_LEDS: process(current_state)
+    begin
+    
+    case current_state is
+            
+            when S2 => 
+                if contador_5s < 10000 then
+                    LEDS(0)<='1';  -- Valor 1
+                elsif contador_5s < 20000 then
+                    LEDS(1)<='1';  -- Valor 2
+                elsif contador_5s < 30000 then
+                    LEDS(2)<='1';  -- Valor 3
+                elsif contador_5s < 40000 then
+                    LEDS(3)<='1';  -- Valor 4
+                elsif contador_5s < 50000 then
+                    LEDS(4)<='1';  -- Valor 2
+                elsif contador_5s < 60000 then
+                    LEDS(5)<='1';  -- Valor 3
+                elsif contador_5s < 70000 then
+                    LEDS(6)<='1';  -- Valor 4
+                elsif contador_5s = 80000 then
+                    counter <= 0;         
+                    LEDS(0)<='0';
+                    LEDS(1)<='0';
+                    LEDS(2)<='0';
+                    LEDS(3)<='0';
+                    LEDS(4)<='0';
+                    LEDS(5)<='0';
+                    LEDS(6)<='0';  
+                end if;
+                
+            when others =>
+                    counter <= 0;         
+                    LEDS(0)<='0';
+                    LEDS(1)<='0';
+                    LEDS(2)<='0';
+                    LEDS(3)<='0';
+                    LEDS(4)<='0';
+                    LEDS(5)<='0';
+                    LEDS(6)<='0';  
+     end case;
+  end process;
+
+
 
 end Behavioral;
 
